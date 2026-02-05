@@ -20,7 +20,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.DriveConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
@@ -44,19 +43,13 @@ public class Drive extends SubsystemBase {
   private final double trackWidthX;
   private final double trackWidthY;
 
-  private final LoggedTunableNumber driveKp =
-      new LoggedTunableNumber("Drive/DriveKp");
-  private final LoggedTunableNumber driveKd =
-      new LoggedTunableNumber("Drive/DriveKd");
-  private final LoggedTunableNumber driveKs =
-      new LoggedTunableNumber("Drive/DriveKs");
-  private final LoggedTunableNumber driveKv =
-      new LoggedTunableNumber("Drive/DriveKv");
+  private final double driveKp;
+  private final double driveKd;
+  private final double driveKs;
+  private final double driveKv;
 
-  private final LoggedTunableNumber turnKp =
-      new LoggedTunableNumber("Drive/TurnKp");
-  private final LoggedTunableNumber turnKd =
-      new LoggedTunableNumber("Drive/TurnKd");
+  private final double turnKp;
+  private final double turnKd;
 
   private final SwerveDriveKinematics kinematics;
   private SimpleMotorFeedforward driveFeedforward;
@@ -89,13 +82,13 @@ public class Drive extends SubsystemBase {
         trackWidthX = Units.inchesToMeters(25.0);
         trackWidthY = Units.inchesToMeters(24.0);
 
-        driveKp.initDefault(0.1);
-        driveKd.initDefault(0.0);
-        driveKs.initDefault(0.12349);
-        driveKv.initDefault(0.13477);
+        driveKp = DriveConstants.Physical.Tunings.driveKp;
+        driveKd = DriveConstants.Physical.Tunings.driveKd;
+        driveKs = DriveConstants.Physical.Tunings.driveKs;
+        driveKv = DriveConstants.Physical.Tunings.driveKv;
 
-        turnKp.initDefault(10.0);
-        turnKd.initDefault(0.0);
+        turnKp = DriveConstants.Physical.Tunings.turnKp;
+        turnKd = DriveConstants.Physical.Tunings.turnKd;
         break;
       case ROBOT_SIMBOT:
         maxLinearSpeed = Units.feetToMeters(14.5);
@@ -103,13 +96,13 @@ public class Drive extends SubsystemBase {
         trackWidthX = 0.65;
         trackWidthY = 0.65;
 
-        driveKp.initDefault(0.9);
-        driveKd.initDefault(0.0);
-        driveKs.initDefault(0.116970);
-        driveKv.initDefault(0.133240);
+        driveKp = DriveConstants.Simulation.Tunings.driveKp;
+        driveKd = DriveConstants.Simulation.Tunings.driveKd;
+        driveKs = DriveConstants.Simulation.Tunings.driveKs;
+        driveKv = DriveConstants.Simulation.Tunings.driveKv;
 
-        turnKp.initDefault(23.0);
-        turnKd.initDefault(0.0);
+        turnKp = DriveConstants.Simulation.Tunings.turnKp;
+        turnKd = DriveConstants.Simulation.Tunings.turnKd;
         break;
       default:
         maxLinearSpeed = 0.0;
@@ -117,20 +110,20 @@ public class Drive extends SubsystemBase {
         trackWidthX = 0.0;
         trackWidthY = 0.0;
 
-        driveKp.initDefault(0.0);
-        driveKd.initDefault(0.0);
-        driveKs.initDefault(0.0);
-        driveKv.initDefault(0.0);
+        driveKp = 0.0;
+        driveKd = 0.0;
+        driveKs = 0.0;
+        driveKv = 0.0;
 
-        turnKp.initDefault(0.0);
-        turnKd.initDefault(0.0);
+        turnKp = 0.0;
+        turnKd = 0.0;
         break;
     }
 
     kinematics = new SwerveDriveKinematics(getModuleTranslations());
-    driveFeedforward = new SimpleMotorFeedforward(driveKs.get(), driveKv.get());
+    driveFeedforward = new SimpleMotorFeedforward(driveKs, driveKv);
     for (int i = 0; i < 4; i++) {
-      driveFeedback[i] = new PIDController(driveKp.get(), 0.0, driveKd.get(),
+      driveFeedback[i] = new PIDController(driveKp, 0.0, driveKd,
           DriveConstants.loopPeriodSecs);
       turnFeedback[i] = new PIDController(turnKp.get(), 0.0, turnKd.get(),
       DriveConstants.loopPeriodSecs);
@@ -198,7 +191,8 @@ public class Drive extends SubsystemBase {
               new SwerveModuleState[] {null, null, null, null};
           for (int i = 0; i < 4; i++) {
             // Run turn controller
-            setpointStatesOptimized[i] =
+            setpointStatesOptimized[i] = setpointStates[i];
+            setpointStatesOptimized[i].optimize(turnPositions[i]);
                 SwerveModuleState.optimize(setpointStates[i], turnPositions[i]);
             if (isStationary) {
               moduleIOs[i].setTurnVoltage(0.0);

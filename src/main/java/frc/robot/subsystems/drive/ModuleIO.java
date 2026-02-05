@@ -6,6 +6,13 @@ package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.AutoLog;
 
+/**
+ * <p>ModuleIO is the main abstraction class of SwerveModules</p>
+ * 
+ * @author Bo Kuang
+ * @version 1.0
+ * @since 2/5/2026
+ */
 public interface ModuleIO {
     @AutoLog
     public static class ModuleIOInputs {
@@ -24,18 +31,38 @@ public interface ModuleIO {
         public double[] turnTempCelcius = new double[] {};
     }
 
-    /** Updates the set of loggable inputs. */
+    /**
+     * Updates the set of loggable inputs. 
+     * 
+     * @param inputs inputs to log and update
+     */
     public default void updateInputs(ModuleIOInputs inputs) {}
 
-    /** Run the drive motor at the specified voltage. */
+    /** 
+     * Run the drive motor at the specified voltage. 
+     * 
+     * @param double voltage
+    */
     public default void setDriveVoltage(double volts) {}
 
-    /** Run the turn motor at the specified voltage. */
+    /** 
+     * Run the turn motor at the specified voltage. 
+     * 
+     * @param double voltage
+     */
     public default void setTurnVoltage(double volts) {}
 
-    /** Enable or disable brake mode on the drive motor. */
+    /** 
+     * Enable or disable brake mode on the drive motor. 
+     *
+     * @param enable  
+     */
     public default void setDriveBrakeMode(boolean enable) {}
 
-    /** Enable or disable brake mode on the turn motor. */
+    /** 
+     * Enable or disable brake mode on the turn motor. 
+     *
+     * @param enable 
+     */
     public default void setTurnBrakeMode(boolean enable) {}
 }
