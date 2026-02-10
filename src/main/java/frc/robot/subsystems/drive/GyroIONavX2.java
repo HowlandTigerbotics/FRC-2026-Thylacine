@@ -8,29 +8,32 @@ package frc.robot.subsystems.drive;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.constants.RobotConstants;
 
-/** IO implementation for Pigeon2 */
+/** IO implementation for NavX2
+ * 
+ * @deprecated Using Pigeon2
+ */
 public class GyroIONavX2 implements GyroIO {
-  private final AHRS gyro;
-  private final double[] xyzDps = new double[3];
+  private  AHRS gyro;
+  private  double[] xyzDps = new double[3];
 
   public GyroIONavX2() {
-    switch (RobotConstants.getRobot()) {
+    /**switch (RobotConstants.getRobot()) {
       case ROBOT_2025S:
         gyro = new AHRS(NavXComType.kMXP_SPI);
         break;
       default:
         throw new RuntimeException("Invalid robot for GyroIONavX2");
-    }
+    }*/
   }
 
   public void updateInputs(GyroIOInputs inputs) {
     xyzDps[0] = gyro.getRawGyroX();
     xyzDps[1] = gyro.getRawGyroY();
     xyzDps[2] = gyro.getRawGyroZ();
-    inputs.positionRad = Units.degreesToRadians(gyro.getYaw());
+    inputs.position = new Rotation2d(Units.degreesToRadians(gyro.getYaw()));
     inputs.velocityRadPerSec = Units.degreesToRadians(xyzDps[2]);
 
   }

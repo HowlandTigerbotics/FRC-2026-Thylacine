@@ -6,6 +6,8 @@ package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+
 /**
  * <p>ModuleIO is the main abstraction class of SwerveModules</p>
  * 
@@ -14,21 +16,26 @@ import org.littletonrobotics.junction.AutoLog;
  * @since 2/5/2026
  */
 public interface ModuleIO {
+    /**
+     * Wrapper Class of data that we can log and record.
+     */
     @AutoLog
     public static class ModuleIOInputs {
+        public boolean driveConnected = false;
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
-        public double driveVelocityFilteredRadPerSec = 0.0;
         public double driveAppliedVolts = 0.0;
-        public double[] driveCurrentAmps = new double[] {};
-        public double[] driveTempCelcius = new double[] {};
+        public double driveCurrentAmps = 0.0;
 
-        public double turnAbsolutePositionRad = 0.0;
-        public double turnPositionRad = 0.0;
-        public double turnVelocityRadPerSec = 0.0;
-        public double turnAppliedVolts = 0.0;
-        public double[] turnCurrentAmps = new double[] {};
-        public double[] turnTempCelcius = new double[] {};
+        public boolean steerConnected = false;
+        public Rotation2d steerPosition = Rotation2d.kZero;
+        public double steerVelocityRadPerSec = 0.0;
+        public double steerAppliedVolts = 0.0;
+        public double steerCurrentAmps = 0.0;
+
+        public double[] odometryTimestamps = new double[] {};
+        public double[] odometryDrivePositionsRad = new double[] {};
+        public Rotation2d[] odometrySteerPositions = new Rotation2d[] {};
     }
 
     /**
@@ -41,28 +48,28 @@ public interface ModuleIO {
     /** 
      * Run the drive motor at the specified voltage. 
      * 
-     * @param double voltage
+     * @param output voltage to run the drive motor.
     */
-    public default void setDriveVoltage(double volts) {}
+    public default void setDriveOpenLoop(double output) {}
 
     /** 
-     * Run the turn motor at the specified voltage. 
+     * Run the steer motor at the specified voltage. 
      * 
-     * @param double voltage
+     * @param output voltage to run the steer motor
      */
-    public default void setTurnVoltage(double volts) {}
+    public default void setSteerOpenLoop(double output) {}
 
-    /** 
-     * Enable or disable brake mode on the drive motor. 
-     *
-     * @param enable  
+    /**
+     * Sets the speed of the drive motor at the specified speed.
+     * 
+     * @param speed
      */
-    public default void setDriveBrakeMode(boolean enable) {}
+    public default void setDriveVelocity(double speed) {}
 
-    /** 
-     * Enable or disable brake mode on the turn motor. 
-     *
-     * @param enable 
+    /**
+     * 
+     * 
+     * @param rotation
      */
-    public default void setTurnBrakeMode(boolean enable) {}
+    public default void setSteerPosition(Rotation2d rotation) {}
 }
