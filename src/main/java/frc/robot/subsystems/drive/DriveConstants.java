@@ -29,22 +29,9 @@ public class DriveConstants {
                 new Translation2d(-kTrackWidth / 2.0, kWheelBase / 2.0),
                 new Translation2d(-kTrackWidth / 2.0, -kWheelBase / 2.0)
         };
-    }
 
-    public static final class Config {
-        // Configurations for motors
         public static final MotorType kMotorType = MotorType.kBrushless;
-        public static final IdleMode kDriveMode = IdleMode.kBrake;
-        public static final boolean kSteerInverted = true;
-        public static final boolean kDriveInverted = true;
 
-        // Voltage / Currents
-        public static final int kMaxDriveCurrent = 30;
-        public static final int kMaxSteerCurrent = 30;
-        public static final double kDriveNominalVoltage = 12.0;
-        public static final double kSteerNominalVoltage = 12.0;
-
-        // Physical Constants / Measurements
         public static final double X_LENGTH = Units.inchesToMeters(27); // Meters
         public static final double Y_LENGTH = Units.inchesToMeters(32);; // Meters
         public static final double kWheelDiameterMeters = 0.0899; // Meters
@@ -62,12 +49,32 @@ public class DriveConstants {
         public static final double kSteerPositionConversionFactor = 2.0 * Math.PI; // Rotations -> Radians
         public static final double kSteerVelocityConversionFactor = kSteerPositionConversionFactor / 60.0; // RPM ->
                                                                                                            // Rad/Sec
-
-        // PathPlanner configuration
+    
         public static final double robotMassKg = 74.088;
         public static final double robotMOI = 6.883;
         public static final double wheelCOF = 1.2;
         public static final double maxSpeedMetersPerSec = 4.8;
+    }
+
+    public static final class Config {
+        // Configurations for motors
+        public static final IdleMode kDriveMode = IdleMode.kBrake;
+        public static final boolean kSteerInverted = true;
+        public static final boolean kDriveInverted = true;
+
+        // Voltage / Currents
+        public static final int kMaxDriveCurrent = 30;
+        public static final int kMaxSteerCurrent = 30;
+        public static final double kDriveNominalVoltage = 12.0;
+        public static final double kSteerNominalVoltage = 12.0;
+
+        // Physical Constants / Measurements
+        
+
+        
+
+        // PathPlanner configuration
+        
         public static final RobotConfig ppConfig = new RobotConfig(
                 robotMassKg,
                 robotMOI,
@@ -120,15 +127,15 @@ public class DriveConstants {
      * 
      */
     public static final class Ports {
-        public static final int FL_DRIVE_PORT = 2;
-        public static final int FR_DRIVE_PORT = 4;
-        public static final int BL_DRIVE_PORT = 8;
-        public static final int BR_DRIVE_PORT = 6;
+        public static final int FL_DRIVE_PORT = 3;
+        public static final int FR_DRIVE_PORT = 1;
+        public static final int BL_DRIVE_PORT = 7;
+        public static final int BR_DRIVE_PORT = 5;
 
-        public static final int FL_STEER_PORT = 1;
-        public static final int FR_STEER_PORT = 3;
-        public static final int BL_STEER_PORT = 7;
-        public static final int BR_STEER_PORT = 5;
+        public static final int FL_STEER_PORT = 4;
+        public static final int FR_STEER_PORT = 2;
+        public static final int BL_STEER_PORT = 8;
+        public static final int BR_STEER_PORT = 6;
 
         public static final int FL_ENCODER_PORT = 12;
         public static final int FR_ENCODER_PORT = 13;

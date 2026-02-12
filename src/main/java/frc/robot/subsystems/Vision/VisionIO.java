@@ -2,17 +2,13 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
-
-import org.littletonrobotics.junction.AutoLog;
+package frc.robot.subsystems.Vision;
 
 /** Add your docs here. */
 public interface VisionIO {
-  @AutoLog
-    public static class VisionInputs {
-      public boolean hasTargets = false;
-      public int ID = -1;
+    @Autolog
+    public static class VisionIOInputs {
+        public boolean connected = false;
+        
     }
-
-  public default void updateValues(VisionInputs input) {}
 }
