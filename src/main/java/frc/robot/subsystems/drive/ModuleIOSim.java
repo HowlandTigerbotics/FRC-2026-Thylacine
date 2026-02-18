@@ -14,6 +14,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.subsystems.drive.DriveConstants.Physical;
 
 import static frc.robot.subsystems.drive.DriveConstants.Tunings;
 
@@ -37,7 +38,7 @@ public class ModuleIOSim implements ModuleIO {
             LinearSystemId.createDCMotorSystem(
               DCMotor.getNEO(1), 
               0.0011, 
-              DriveConstants.Config.kDriveReduction
+              Physical.kDriveReduction
             ),
             DCMotor.getNEO(1));
     steerSim =
@@ -45,7 +46,7 @@ public class ModuleIOSim implements ModuleIO {
             LinearSystemId.createDCMotorSystem(
               DCMotor.getNEO(1), 
               0.013, 
-              DriveConstants.Config.kSteerReduction
+              Physical.kSteerReduction
             ),
             DCMotor.getNEO(1));
 

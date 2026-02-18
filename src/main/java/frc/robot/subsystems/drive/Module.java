@@ -38,7 +38,8 @@ public class Module {
         int sampleCount = inputs.odometryTimestamps.length;
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * DriveConstants.Config.kWheelDiameterMeters
+            double positionMeters = inputs.odometryDrivePositionsRad[i] * 
+                DriveConstants.Physical.kWheelDiameterMeters
                     / 2.0;
             Rotation2d angle = inputs.odometrySteerPositions[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
@@ -55,7 +56,7 @@ public class Module {
         state.cosineScale(inputs.steerPosition);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / DriveConstants.Config.kWheelDiameterMeters / 2.0);
+        io.setDriveVelocity(state.speedMetersPerSecond / DriveConstants.Physical.kWheelDiameterMeters / 2.0);
         io.setSteerPosition(state.angle);
     }
 

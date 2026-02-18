@@ -15,9 +15,6 @@ import edu.wpi.first.math.util.Units;
 
 /** Add your docs here. */
 public class DriveConstants {
-
-    public static final double loopPeriodSecs = 0.02; // 50 Hertz
-
     public static final class Physical {
         public static final double kWheelRadiusMeters = Units.inchesToMeters(3.5) / 2.0;
         public static final double kTrackWidth = Units.inchesToMeters(26.5);
@@ -68,21 +65,19 @@ public class DriveConstants {
         public static final double kDriveNominalVoltage = 12.0;
         public static final double kSteerNominalVoltage = 12.0;
 
-        // Physical Constants / Measurements
-        
-
-        
+        public static final int sensorRefreshRateMs = 20;
+        public static final int odometryRefreshRateMs = 50;
 
         // PathPlanner configuration
         
         public static final RobotConfig ppConfig = new RobotConfig(
-                robotMassKg,
-                robotMOI,
+                Physical.robotMassKg,
+                Physical.robotMOI,
                 new ModuleConfig(
                         Physical.kWheelRadiusMeters,
-                        maxSpeedMetersPerSec,
-                        wheelCOF,
-                        DCMotor.getNEO(1).withReduction(kDriveReduction),
+                        Physical.maxSpeedMetersPerSec,
+                        Physical.wheelCOF,
+                        DCMotor.getNEO(1).withReduction(Physical.kDriveReduction),
                         kMaxDriveCurrent,
                         1),
                 Physical.moduleTranslations);

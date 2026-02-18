@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.subsystems.drive.DriveConstants.Config;
 
 /** IO implementation for NavX2
  * 
@@ -32,7 +33,7 @@ public class GyroIOPigeon implements GyroIO {
   public GyroIOPigeon() {
     pigeon.getConfigurator().apply(new Pigeon2Configuration());
     pigeon.getConfigurator().setYaw(0.0);
-    yaw.setUpdateFrequency((int)(1000.0 * DriveConstants.loopPeriodSecs));
+    yaw.setUpdateFrequency(Config.sensorRefreshRateMs);
     yawVelocity.setUpdateFrequency(50.0);
     pigeon.optimizeBusUtilization();
 

@@ -13,8 +13,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 import com.revrobotics.util.StatusLogger;
 
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -28,18 +28,7 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
 
-  //private PhotonCamera cam = new PhotonCamera("Camera_Module_v2");
-
-  private final Alert logNoFileAlert =
-      new Alert("No log path set for current robot. Data will NOT be logged.",
-          AlertType.kWarning);
-  private final Alert logReceiverQueueAlert =
-      new Alert("Logging queue exceeded capacity, data will NOT be logged.",
-          AlertType.kError);
-
   public Robot() {
-    
-    
         // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL:
@@ -61,6 +50,11 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         break;
     }
+
+    
+
+    PowerDistribution a = new PowerDistribution(1,ModuleType.kRev);
+    a.setSwitchableChannel(true);
 
     // Initialize URCL
     Logger.registerURCL(URCL.startExternal());

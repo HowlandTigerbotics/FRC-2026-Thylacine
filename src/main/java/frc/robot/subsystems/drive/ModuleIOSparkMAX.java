@@ -4,9 +4,7 @@
 
 package frc.robot.subsystems.drive;
 
-import static frc.robot.util.SparkUtil.ifOk;
-import static frc.robot.util.SparkUtil.sparkStickyFault;
-import static frc.robot.util.SparkUtil.tryUntilOk;
+import static frc.robot.util.SparkUtil.*;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
@@ -20,7 +18,6 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
@@ -29,7 +26,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
+import frc.robot.subsystems.drive.DriveConstants.*;
 
 /**
  * <p>
@@ -70,36 +67,36 @@ public class ModuleIOSparkMAX implements ModuleIO {
     public ModuleIOSparkMAX(ModuleIndex index) {
         absoluteEncoderOffset = new Rotation2d(
                 switch (index) {
-                    case FL -> DriveConstants.Offsets.FL_OFFSET;
-                    case FR -> DriveConstants.Offsets.FR_OFFSET;
-                    case BL -> DriveConstants.Offsets.BL_OFFSET;
-                    case BR -> DriveConstants.Offsets.BR_OFFSET;
+                    case FL -> Offsets.FL_OFFSET;
+                    case FR -> Offsets.FR_OFFSET;
+                    case BL -> Offsets.BL_OFFSET;
+                    case BR -> Offsets.BR_OFFSET;
                     default -> 0;
                 });
         driveMotor = new SparkMax(
                 switch (index) {
-                    case FL -> DriveConstants.Ports.FL_DRIVE_PORT;
-                    case FR -> DriveConstants.Ports.FR_DRIVE_PORT;
-                    case BL -> DriveConstants.Ports.BL_DRIVE_PORT;
-                    case BR -> DriveConstants.Ports.BR_DRIVE_PORT;
+                    case FL -> Ports.FL_DRIVE_PORT;
+                    case FR -> Ports.FR_DRIVE_PORT;
+                    case BL -> Ports.BL_DRIVE_PORT;
+                    case BR -> Ports.BR_DRIVE_PORT;
                     default -> 0;
                 },
-                DriveConstants.Config.kMotorType);
+                Physical.kMotorType);
         steerMotor = new SparkMax(
                 switch (index) {
-                    case FL -> DriveConstants.Ports.FL_STEER_PORT;
-                    case FR -> DriveConstants.Ports.FR_STEER_PORT;
-                    case BL -> DriveConstants.Ports.BL_STEER_PORT;
-                    case BR -> DriveConstants.Ports.BR_STEER_PORT;
+                    case FL -> Ports.FL_STEER_PORT;
+                    case FR -> Ports.FR_STEER_PORT;
+                    case BL -> Ports.BL_STEER_PORT;
+                    case BR -> Ports.BR_STEER_PORT;
                     default -> 0;
                 },
-                DriveConstants.Config.kMotorType);
+                Physical.kMotorType);
         absoluteEncoder = new CANcoder(
                 switch (index) {
-                    case FL -> DriveConstants.Ports.FL_ENCODER_PORT;
-                    case FR -> DriveConstants.Ports.FR_ENCODER_PORT;
-                    case BL -> DriveConstants.Ports.BL_ENCODER_PORT;
-                    case BR -> DriveConstants.Ports.BR_ENCODER_PORT;
+                    case FL -> Ports.FL_ENCODER_PORT;
+                    case FR -> Ports.FR_ENCODER_PORT;
+                    case BL -> Ports.BL_ENCODER_PORT;
+                    case BR -> Ports.BR_ENCODER_PORT;
                     default -> 0;
                 });
 
@@ -123,27 +120,27 @@ public class ModuleIOSparkMAX implements ModuleIO {
         var driveConfig = new SparkFlexConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(DriveConstants.Config.kMaxDriveCurrent)
-                .voltageCompensation(DriveConstants.Config.kDriveNominalVoltage);
+                .smartCurrentLimit(Config.kMaxDriveCurrent)
+                .voltageCompensation(Config.kDriveNominalVoltage);
         driveConfig.encoder
-                .positionConversionFactor(DriveConstants.Config.kDrivePositionConversionFactor)
-                .velocityConversionFactor(DriveConstants.Config.kDriveVelocityConversionFactor)
+                .positionConversionFactor(Physical.kDrivePositionConversionFactor)
+                .velocityConversionFactor(Physical.kDriveVelocityConversionFactor)
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
         driveConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(
-                        DriveConstants.Tunings.driveP,
+                        Tunings.driveP,
                         0.0,
-                        DriveConstants.Tunings.driveD);
+                        Tunings.driveD);
         driveConfig.signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
+                .primaryEncoderPositionPeriodMs(Config.odometryRefreshRateMs)
                 .primaryEncoderVelocityAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .appliedOutputPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .busVoltagePeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .outputCurrentPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000));
+                .primaryEncoderVelocityPeriodMs(Config.sensorRefreshRateMs)
+                .appliedOutputPeriodMs(Config.sensorRefreshRateMs)
+                .busVoltagePeriodMs(Config.sensorRefreshRateMs)
+                .outputCurrentPeriodMs(Config.sensorRefreshRateMs);
         tryUntilOk(
                 driveMotor,
                 5,
@@ -154,13 +151,13 @@ public class ModuleIOSparkMAX implements ModuleIO {
         // Configure steer motor
         SparkMaxConfig steerConfig = new SparkMaxConfig();
         steerConfig
-                .inverted(DriveConstants.Config.kSteerInverted)
+                .inverted(Config.kSteerInverted)
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(DriveConstants.Config.kMaxSteerCurrent)
-                .voltageCompensation(DriveConstants.Config.kSteerNominalVoltage);
+                .smartCurrentLimit(Config.kMaxSteerCurrent)
+                .voltageCompensation(Config.kSteerNominalVoltage);
         steerConfig.encoder
-                .positionConversionFactor(DriveConstants.Config.kSteerPositionConversionFactor)
-                .velocityConversionFactor(DriveConstants.Config.kSteerVelocityConversionFactor)
+                .positionConversionFactor(Physical.kSteerPositionConversionFactor)
+                .velocityConversionFactor(Physical.kSteerVelocityConversionFactor)
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
         steerConfig.closedLoop
@@ -168,17 +165,17 @@ public class ModuleIOSparkMAX implements ModuleIO {
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(-Math.PI, Math.PI)
                 .pid(
-                        DriveConstants.Tunings.steerP,
+                        Tunings.steerP,
                         0.0,
-                        DriveConstants.Tunings.steerD);
+                        Tunings.steerD);
         steerConfig.signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
+                .primaryEncoderPositionPeriodMs(Config.odometryRefreshRateMs)
                 .primaryEncoderVelocityAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .appliedOutputPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .busVoltagePeriodMs((int) (DriveConstants.loopPeriodSecs * 1000))
-                .outputCurrentPeriodMs((int) (DriveConstants.loopPeriodSecs * 1000));
+                .primaryEncoderVelocityPeriodMs(Config.sensorRefreshRateMs)
+                .appliedOutputPeriodMs(Config.sensorRefreshRateMs)
+                .busVoltagePeriodMs(Config.sensorRefreshRateMs)
+                .outputCurrentPeriodMs(Config.sensorRefreshRateMs);
 
         tryUntilOk(
                 steerMotor,
@@ -246,8 +243,8 @@ public class ModuleIOSparkMAX implements ModuleIO {
 
     @Override
     public void setDriveVelocity(double velocityRadPerSec) {
-        double ffVolts = DriveConstants.Tunings.driveKs * Math.signum(velocityRadPerSec)
-                + DriveConstants.Tunings.driveKv * velocityRadPerSec;
+        double ffVolts = Tunings.driveKs * Math.signum(velocityRadPerSec)
+                + Tunings.driveKv * velocityRadPerSec;
         driveController.setSetpoint(
                 velocityRadPerSec,
                 ControlType.kVelocity,
