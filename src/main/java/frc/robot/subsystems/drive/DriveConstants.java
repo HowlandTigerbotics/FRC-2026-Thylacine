@@ -1,102 +1,139 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot.subsystems.drive;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 
-
-/** Add your docs here. */
 public class DriveConstants {
+  public static final class Physical {
+    // TODO: Check
 
-    public static final double loopPeriodSecs = 0.02;
-        
-        /**
-         * Physical configurations of the motors
-         */
-        public static final class Config {
-            // Configurations for motors
-            public static final MotorType kMotorType = MotorType.kBrushless;
-            public static final IdleMode kDriveMode = IdleMode.kBrake;
-            public static final boolean kAngleInverted = true;
-            public static final boolean kDriveInverted = true;
+    /**
+     * Measurements of robot dimensions.
+     * 
+     * trackWdith refers to the distance between the center of a left wheel and
+     * right wheel.
+     * wheelBase refers to the distance between the center of a front wheel and a
+     * back wheel.
+     */
+    public static final double trackWidthMeters = Units.inchesToMeters(26.5);
+    public static final double wheelBaseMeters = Units.inchesToMeters(26.5);
+    public static final double driveBaseRadiusMeters = Math.hypot(trackWidthMeters / 2.0, wheelBaseMeters / 2.0);
 
-            // Voltage / Currents
-            public static final int kMaxDriveCurrent = 30;
-            public static final int kMaxAngleCurrent = 30;
-            public static final double kDriveNominalVoltage = 12.0;
-            public static final double kAngleNominalVoltage = 12.0;
+    public static final Translation2d[] moduleTranslationsMeters = new Translation2d[] {
+        new Translation2d(trackWidthMeters / 2.0, wheelBaseMeters / 2.0),
+        new Translation2d(trackWidthMeters / 2.0, -wheelBaseMeters / 2.0),
+        new Translation2d(-trackWidthMeters / 2.0, wheelBaseMeters / 2.0),
+        new Translation2d(-trackWidthMeters / 2.0, -wheelBaseMeters / 2.0)
+    };
 
-            // Physical Constants / Measurements
-            public static final double X_LENGTH = Units.inchesToMeters(27); // Meters
-            public static final double Y_LENGTH = Units.inchesToMeters(32);; // Meters
-            public static final double kWheelDiameter = 0.0899; // Meters
-            public static final double kDriveReduction = 8.14; // MKI4 LV1 8.14:1
-            public static final double kAngleReduction = 150.0 / 7.0; // MKI4
+    public static final double wheelRadiusMeters = Units.inchesToMeters(1.5);
 
-            // Conversion / Device Constants
-            public final static double kDrivePositionMetersConversionFactor = Math.PI * kWheelDiameter
-                    * kDriveReduction;
-            public final static double kAnglePositionMetersConversionFactor = 2.0 * Math.PI * kAngleReduction;
-        }
+    public static final DCMotor driveGearbox = DCMotor.getNEO(1);
+    public static final double driveMotorReduction = (45.0 * 22.0) / (14.0 * 15.0); // MAXSwerve with 14 pinion teeth
+    // and 22 spur teeth
 
-        /**
-         * Holds tunings for the motor controllers
-         */
-        public static final class Tunings {
-            public static final double driveKp = 0.1;
-            public static final double driveKd = 0.0113;
-            public static final double driveKs = 0;
-            public static final double driveKv = 0;
-            
-            public static final double turnKp = 11;
-            public static final double turnKd = 0;
-        }
+    public static final DCMotor steerGearbox = DCMotor.getNEO(1);
+    public static final double steerMotorReduction = 9424.0 / 203.0;
 
-        /**
-         * Offsets for the absolute encoders
-         * 
-         * @deprecated See PhoenixTuner Zero functionality.
-         */
-        public static final class Offsets {
-            public static final double FL_OFFSET = 0;// 259.687; // 247.499;
-            public static final double FR_OFFSET = 0;//201.533 + 180; // 313.417 + 180.0;
-            public static final double BL_OFFSET = 0; //190.567; // 7.646;
-            public static final double BR_OFFSET = 0; //150.5566 + 180; // 310.957;
-        }
+    // Drive encoder configuration
+    public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction; // Rotor Rotations ->
+    // Wheel Radians
+    public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction; // Rotor RPM ->
+    // Wheel Rad/Sec
 
-        /**
-         * CanID Ports for the motors and absolute encoders.
-         * 
-         */
-        public static final class Ports {
-            public static final int FL_DRIVE_PORT= 2;
-            public static final int FR_DRIVE_PORT = 4;
-            public static final int BL_DRIVE_PORT = 8;
-            public static final int BR_DRIVE_PORT = 6;
+    // Steer encoder configuration
+    public static final double steerEncoderPositionFactor = 2 * Math.PI / steerMotorReduction; // Rotor Rotations ->
+    // Wheel Radians
+    public static final double steerEncoderVelocityFactor = (2 * Math.PI) / 60.0 / steerMotorReduction; // Rotor RPM ->
+    // Wheel Rad/Sec
 
-            public static final int FL_ANGLE_PORT = 1;
-            public static final int FR_ANGLE_PORT = 3;
-            public static final int BL_ANGLE_PORT = 7;
-            public static final int BR_ANGLE_PORT = 5;
+    // PathPlanner configuration
+    public static final double robotMassKg = 74.088;
+    public static final double robotMOI = 6.883;
+    public static final double wheelCOF = 1.2;
+  }
 
-            public static final int FL_ENCODER_PORT = 12;
-            public static final int FR_ENCODER_PORT = 13;
-            public static final int BL_ENCODER_PORT = 11;
-            public static final int BR_ENCODER_PORT = 10;
-        }
+  public static final class Config {
+    // Sensor Frequency
+    public static final double odometryFrequency = 100.0; // Hz
+    public static final double encoderFrequency = 2000.0; // Hz
+    public static final double gyroFrequency = 20.0; // Hz
 
-        /**
-         * Enum values of the physical locations.
-         * 
-         * FL = Front Left
-         * BR = Back Right
-         */
-        public static enum ModuleIndex {
-        FL, FR, BL, BR;
-    }
+    // Speed Limits
+    public static final double maxSpeedMetersPerSec = 4.8;
+
+    // Drive motor configuration
+    public static final int driveMotorCurrentLimit = 40;
+    public static final double driveMotorNominalVoltage = 12.0;
+
+    // Steer motor configuration
+    public static final boolean steerInverted = false;
+    public static final int steerMotorCurrentLimit = 30;
+    public static final double steerMotorNominalVoltage = 12.0;
+
+    // Pathplanner Config
+    public static final RobotConfig ppConfig = new RobotConfig(
+        Physical.robotMassKg,
+        Physical.robotMOI,
+        new ModuleConfig(
+            Physical.wheelRadiusMeters,
+            Config.maxSpeedMetersPerSec,
+            Physical.wheelCOF,
+            Physical.driveGearbox.withReduction(Physical.driveMotorReduction),
+            Config.driveMotorCurrentLimit,
+            1),
+        Physical.moduleTranslationsMeters);
+  }
+
+  public static final class Ports {
+    // Device CAN IDs
+    public static final int PIGEON_CAN_ID_PORT = 14;
+
+    public static final int FRONT_LEFT_DRIVE_MOTOR_PORT = 3;
+    public static final int FRONT_RIGHT_DRIVE_MOTOR_PORT = 1;
+    public static final int BACK_LEFT_DRIVE_MOTOR_PORT = 7;
+    public static final int BACK_RIGHT_DRIVE_MOTOR_PORT = 5;
+
+    public static final int FRONT_LEFT_STEER_MOTOR_PORT = 4;
+    public static final int FRONT_RIGHT_STEER_MOTOR_PORT = 2;
+    public static final int BACK_LEFT_STEER_MOTOR_PORT = 8;
+    public static final int BACK_RIGHT_STEER_MOTOR_PORT = 6;
+
+    public static final int FRONT_LEFT_ABSOLUTE_ENCODER_PORT = 12;
+    public static final int FRONT_RIGHT_ABSOLUTE_ENCODER_PORT = 13;
+    public static final int BACK_LEFT_ABSOLUTE_ENCODER_PORT = 11;
+    public static final int BACK_RIGHT_ABSOLUTE_ENCODER_PORT = 10;
+  }
+
+  public static final class Tunings {
+    // Zeroed rotation values for each module, see setup instructions
+    // Drive PID configuration
+    public static final double driveKp = 0.0;
+    public static final double driveKd = 0.0;
+    public static final double driveKs = 0.0;
+    public static final double driveKv = 0.1;
+    public static final double driveSimP = 0.05;
+    public static final double driveSimD = 0.0;
+    public static final double driveSimKs = 0.0;
+    public static final double driveSimKv = 0.0789;
+
+    // Steer PID configuration
+    public static final double steerKp = 2.0;
+    public static final double steerKd = 0.0;
+    public static final double steerSimP = 8.0;
+    public static final double steerSimD = 0.0;
+    public static final double steerPIDMinInput = 0; // Radians
+    public static final double steerPIDMaxInput = 2 * Math.PI; // Radians
+  }
+
 }

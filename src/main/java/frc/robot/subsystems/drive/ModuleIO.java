@@ -1,68 +1,65 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 
 package frc.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+
 /**
- * <p>ModuleIO is the main abstraction class of SwerveModules</p>
+ * <p>
+ * ModuleIO is the main abstraction class of SwerveModules
+ * </p>
  * 
- * @author Bo Kuang
+ * @author Mechanical Advantage (6328)
+ * @author Bo Kuang (8718)
  * @version 1.0
  * @since 2/5/2026
  */
 public interface ModuleIO {
+
     @AutoLog
     public static class ModuleIOInputs {
+        public boolean driveConnected = false;
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
-        public double driveVelocityFilteredRadPerSec = 0.0;
         public double driveAppliedVolts = 0.0;
-        public double[] driveCurrentAmps = new double[] {};
-        public double[] driveTempCelcius = new double[] {};
+        public double driveCurrentAmps = 0.0;
 
-        public double turnAbsolutePositionRad = 0.0;
-        public double turnPositionRad = 0.0;
-        public double turnVelocityRadPerSec = 0.0;
-        public double turnAppliedVolts = 0.0;
-        public double[] turnCurrentAmps = new double[] {};
-        public double[] turnTempCelcius = new double[] {};
+        public boolean steerConnected = false;
+        public Rotation2d steerPosition = Rotation2d.kZero;
+        public double steerVelocityRadPerSec = 0.0;
+        public double steerAppliedVolts = 0.0;
+        public double steerCurrentAmps = 0.0;
+
+        public double[] odometryTimestamps = new double[] {};
+        public double[] odometryDrivePositionsRad = new double[] {};
+        public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
     }
 
-    /**
-     * Updates the set of loggable inputs. 
-     * 
-     * @param inputs inputs to log and update
-     */
-    public default void updateInputs(ModuleIOInputs inputs) {}
+    /** Updates the set of loggable inputs. */
+    public default void updateInputs(ModuleIOInputs inputs) {
+    }
 
-    /** 
-     * Run the drive motor at the specified voltage. 
-     * 
-     * @param double voltage
-    */
-    public default void setDriveVoltage(double volts) {}
+    /** Run the drive motor at the specified open loop value. */
+    public default void setDriveOpenLoop(double output) {
+    }
 
-    /** 
-     * Run the turn motor at the specified voltage. 
-     * 
-     * @param double voltage
-     */
-    public default void setTurnVoltage(double volts) {}
+    /** Run the steer motor at the specified open loop value. */
+    public default void setTurnOpenLoop(double output) {
+    }
 
-    /** 
-     * Enable or disable brake mode on the drive motor. 
-     *
-     * @param enable  
-     */
-    public default void setDriveBrakeMode(boolean enable) {}
+    /** Run the drive motor at the specified velocity. */
+    public default void setDriveVelocity(double velocityRadPerSec) {
+    }
 
-    /** 
-     * Enable or disable brake mode on the turn motor. 
-     *
-     * @param enable 
-     */
-    public default void setTurnBrakeMode(boolean enable) {}
+    /** Run the steer motor to the specified rotation. */
+    public default void setTurnPosition(Rotation2d rotation) {
+    }
 }

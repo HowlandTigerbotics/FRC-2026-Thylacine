@@ -1,191 +1,249 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot.subsystems.drive;
 
+import static frc.robot.subsystems.drive.DriveConstants.*;
+import static frc.robot.util.SparkUtil.*;
+
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.*;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
-
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.constants.RobotConstants;
-import frc.robot.constants.RobotConstants.RobotType;
-import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
-import frc.robot.util.SparkMaxDerivedVelocityController;
+import java.util.Queue;
+import java.util.function.DoubleSupplier;
 
-/** 
- * <p> Physical Implementation of a SwerveModule with SparkMax Controllers. </p>
- *  
- * @author Bo Kuang
- * @version 1.0
- * @since 2/5/2026
+/**
+ * Module IO implementation for Spark Flex drive motor controller, Spark Max steer motor controller,
+ * and duty cycle absolute encoder.
  */
-public class ModuleIOSparkMAX implements ModuleIO {   
-    // Declarations
-    private final SparkMax driveMotor;
-    private final SparkMax angleMotor;
+public class ModuleIOSparkMAX implements ModuleIO {
+  private final Rotation2d zeroRotation;
 
-    private final RelativeEncoder driveEncoder;
-    private final RelativeEncoder angleEncoder;
-    private final CANcoder absoluteEncoder;
-    private final Rotation2d absoluteEncoderOffset;
+  // Hardware objects
+  private final SparkBase driveSpark;
+  private final SparkBase steerSpark;
+  private final RelativeEncoder driveEncoder;
+  private final RelativeEncoder steerEncoder;
+  private final CANcoder absoluteEncoder;
 
-    private final SparkMaxDerivedVelocityController driveDerivedVelocityController;
+  // Closed loop controllers
+  private final SparkClosedLoopController driveController;
+  private final SparkClosedLoopController steerController;
 
-    /**
-     * Initializes a motor controllers based on the which position it is.
-     * 
-     * @param index Index that corresponds to the physical module position
-     * @throws RuntimeException if RobotState is not physical
-     */
-    public ModuleIOSparkMAX(ModuleIndex index) {
-        if (RobotConstants.getRobot() == RobotType.ROBOT_2025S) {
-            switch (index) {
-                case FL:
-                    driveMotor = new SparkMax(
-                        DriveConstants.Ports.FL_DRIVE_PORT,
-                        DriveConstants.Config.kMotorType
-                    );
-                    angleMotor = new SparkMax(
-                        DriveConstants.Ports.FL_ANGLE_PORT, 
-                        DriveConstants.Config.kMotorType
-                    );
-                    absoluteEncoder = new CANcoder(DriveConstants.Ports.FL_ENCODER_PORT);
-                    absoluteEncoderOffset = new Rotation2d(DriveConstants.Offsets.FL_OFFSET);
-                break;
-                case FR:
-                    driveMotor = new SparkMax(
-                        DriveConstants.Ports.FR_DRIVE_PORT,
-                        DriveConstants.Config.kMotorType
-                    );
-                    angleMotor = new SparkMax(
-                        DriveConstants.Ports.FR_ANGLE_PORT, 
-                        DriveConstants.Config.kMotorType
-                    );
-                    absoluteEncoder = new CANcoder(DriveConstants.Ports.FR_ENCODER_PORT);
-                    absoluteEncoderOffset = new Rotation2d(DriveConstants.Offsets.FR_OFFSET);
-                break;
-                case BL:
-                    driveMotor = new SparkMax(
-                        DriveConstants.Ports.BL_DRIVE_PORT,
-                        DriveConstants.Config.kMotorType
-                    );
-                    angleMotor = new SparkMax(
-                        DriveConstants.Ports.BL_ANGLE_PORT, 
-                        DriveConstants.Config.kMotorType
-                    );
-                    absoluteEncoder = new CANcoder(DriveConstants.Ports.BL_ENCODER_PORT);
-                    absoluteEncoderOffset = new Rotation2d(DriveConstants.Offsets.BL_OFFSET);
-                break;
-                case BR:
-                    driveMotor = new SparkMax(
-                        DriveConstants.Ports.BR_DRIVE_PORT,
-                        DriveConstants.Config.kMotorType
-                    );
-                    angleMotor = new SparkMax(
-                        DriveConstants.Ports.BR_ANGLE_PORT, 
-                        DriveConstants.Config.kMotorType
-                    );
-                    absoluteEncoder = new CANcoder(DriveConstants.Ports.BR_ENCODER_PORT);
-                    absoluteEncoderOffset = new Rotation2d(DriveConstants.Offsets.BR_OFFSET);
-                break;
-                default:
-                    throw new RuntimeException("Invalid module index for ModuleIOSparkMAX");
-            }
+  // Queue inputs from odometry thread
+  private final Queue<Double> timestampQueue;
+  private final Queue<Double> drivePositionQueue;
+  private final Queue<Double> steerPositionQueue;
+
+  // Connection debouncers
+  private final Debouncer driveConnectedDebounce =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer steerConnectedDebounce =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+
+  public ModuleIOSparkMAX(int module) {
+    zeroRotation = Rotation2d.kZero;
+    driveSpark =
+        new SparkMax(
+            switch (module) {
+              case 0 -> Ports.FRONT_LEFT_DRIVE_MOTOR_PORT;
+              case 1 -> Ports.FRONT_RIGHT_DRIVE_MOTOR_PORT;
+              case 2 -> Ports.BACK_LEFT_DRIVE_MOTOR_PORT;
+              case 3 -> Ports.BACK_RIGHT_DRIVE_MOTOR_PORT;
+              default -> 0;
+            },
+            MotorType.kBrushless);
+    steerSpark =
+        new SparkMax(
+            switch (module) {
+              case 0 -> Ports.FRONT_LEFT_STEER_MOTOR_PORT;
+              case 1 -> Ports.FRONT_RIGHT_STEER_MOTOR_PORT;
+              case 2 -> Ports.BACK_LEFT_STEER_MOTOR_PORT;
+              case 3 -> Ports.BACK_RIGHT_STEER_MOTOR_PORT;
+              default -> 0;
+            },
+            MotorType.kBrushless);
+    absoluteEncoder = new CANcoder(
+        switch (module) {
+            case 0 -> Ports.FRONT_LEFT_ABSOLUTE_ENCODER_PORT;
+            case 1 -> Ports.FRONT_RIGHT_ABSOLUTE_ENCODER_PORT;
+            case 2 -> Ports.BACK_LEFT_ABSOLUTE_ENCODER_PORT;
+            case 3 -> Ports.BACK_RIGHT_ABSOLUTE_ENCODER_PORT;
+            default -> 0;
         }
-        else
-            throw new RuntimeException("Invalid robot for ModuleIOSparkMAX");
+    );
+    driveEncoder = driveSpark.getEncoder();
+    steerEncoder = steerSpark.getEncoder();
+    driveController = driveSpark.getClosedLoopController();
+    steerController = steerSpark.getClosedLoopController();
 
-        driveDerivedVelocityController =
-            new SparkMaxDerivedVelocityController(driveMotor);
-        driveEncoder = driveMotor.getEncoder();
-        angleEncoder = angleMotor.getEncoder();
-    }
+    // Configure drive motor
+    var driveConfig = new SparkMaxConfig();
+    driveConfig
+        .idleMode(IdleMode.kBrake)
+        .smartCurrentLimit(Config.driveMotorCurrentLimit)
+        .voltageCompensation(12.0);
+    driveConfig
+        .encoder
+        .positionConversionFactor(Physical.driveEncoderPositionFactor)
+        .velocityConversionFactor(Physical.driveEncoderVelocityFactor)
+        .uvwMeasurementPeriod(10)
+        .uvwAverageDepth(2);
+    driveConfig
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .pid(Tunings.driveKp, 0.0, Tunings.driveKd);
+    driveConfig
+        .signals
+        .primaryEncoderPositionAlwaysOn(true)
+        .primaryEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
+        .primaryEncoderVelocityAlwaysOn(true)
+        .primaryEncoderVelocityPeriodMs(20)
+        .appliedOutputPeriodMs(20)
+        .busVoltagePeriodMs(20)
+        .outputCurrentPeriodMs(20);
+    tryUntilOk(
+        driveSpark,
+        5,
+        () ->
+            driveSpark.configure(
+                driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(driveSpark, 5, () -> driveEncoder.setPosition(0.0));
 
-    /**
-     * Configures the motor controllers and all encoders.
-     */
-    public void configure() {
-        SparkMaxConfig config = new SparkMaxConfig();
+    // Configure steer motor
+    var steerConfig = new SparkMaxConfig();
+    steerConfig
+        .inverted(Config.steerInverted)
+        .idleMode(IdleMode.kBrake)
+        .smartCurrentLimit(Config.steerMotorCurrentLimit)
+        .voltageCompensation(12.0);
+    steerConfig
+        .encoder
+        .positionConversionFactor(Physical.steerEncoderPositionFactor)
+        .velocityConversionFactor(Physical.steerEncoderVelocityFactor)
+        .uvwMeasurementPeriod(10)
+        .uvwAverageDepth(2);
+    steerConfig
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .positionWrappingEnabled(true)
+        .positionWrappingInputRange(-Math.PI, Math.PI)
+        .pid(Tunings.steerKp, 0.0, Tunings.steerKd);
+    steerConfig
+        .signals
+        .absoluteEncoderPositionAlwaysOn(true)
+        .absoluteEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
+        .absoluteEncoderVelocityAlwaysOn(true)
+        .absoluteEncoderVelocityPeriodMs(20)
+        .appliedOutputPeriodMs(20)
+        .busVoltagePeriodMs(20)
+        .outputCurrentPeriodMs(20);
+    tryUntilOk(
+        steerSpark,
+        5,
+        () ->
+            steerSpark.configure(
+                steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
-        // To avoid "brown-outs," limit the current and compensate voltages.
-        config.smartCurrentLimit(DriveConstants.Config.kMaxDriveCurrent)
-              .voltageCompensation(DriveConstants.Config.kDriveNominalVoltage);
+    // Create odometry queues
+    timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+    drivePositionQueue =
+        SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
+    steerPositionQueue =
+        SparkOdometryThread.getInstance().registerSignal(steerSpark, steerEncoder::getPosition);
 
-        // Set other configurations
-        config.idleMode(DriveConstants.Config.kDriveMode)
-              .inverted(DriveConstants.Config.kDriveInverted);
+    // Reset Encoders
+    driveEncoder.setPosition(0.0);
+    steerEncoder.setPosition(
+        absoluteEncoder.getPosition().getValueAsDouble()
+    );
+  }
 
-        // Configure
-        driveMotor.configure(config, null, PersistMode.kPersistParameters);
+  @Override
+  public void updateInputs(ModuleIOInputs inputs) {
+    // Update drive inputs
+    sparkStickyFault = false;
+    ifOk(driveSpark, driveEncoder::getPosition, (value) -> inputs.drivePositionRad = value);
+    ifOk(driveSpark, driveEncoder::getVelocity, (value) -> inputs.driveVelocityRadPerSec = value);
+    ifOk(
+        driveSpark,
+        new DoubleSupplier[] {driveSpark::getAppliedOutput, driveSpark::getBusVoltage},
+        (values) -> inputs.driveAppliedVolts = values[0] * values[1]);
+    ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
+    inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
-        // Repeat for steer motor
-        config.inverted(DriveConstants.Config.kAngleInverted)
-            .smartCurrentLimit(DriveConstants.Config.kMaxAngleCurrent)
-            .voltageCompensation(DriveConstants.Config.kAngleNominalVoltage);
-        angleMotor.configure(config, null, PersistMode.kPersistParameters);
+    // Update steer inputs
+    sparkStickyFault = false;
+    ifOk(
+        steerSpark,
+        steerEncoder::getPosition,
+        (value) -> inputs.steerPosition = new Rotation2d(value).minus(zeroRotation));
+    ifOk(steerSpark, steerEncoder::getVelocity, (value) -> inputs.steerVelocityRadPerSec = value);
+    ifOk(
+        steerSpark,
+        new DoubleSupplier[] {steerSpark::getAppliedOutput, steerSpark::getBusVoltage},
+        (values) -> inputs.steerAppliedVolts = values[0] * values[1]);
+    ifOk(steerSpark, steerSpark::getOutputCurrent, (value) -> inputs.steerCurrentAmps = value);
+    inputs.steerConnected = steerConnectedDebounce.calculate(!sparkStickyFault);
 
-        // Reset encoder reading of motor
-        angleEncoder.setPosition(0.0);
+    // Update odometry inputs
+    inputs.odometryTimestamps =
+        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryDrivePositionsRad =
+        drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryTurnPositions =
+        steerPositionQueue.stream()
+            .map((Double value) -> new Rotation2d(value).minus(zeroRotation))
+            .toArray(Rotation2d[]::new);
+    timestampQueue.clear();
+    drivePositionQueue.clear();
+    steerPositionQueue.clear();
+  }
 
-        // Prevent commands from blocking other commands.
-        driveMotor.setCANTimeout(0);
-        angleMotor.setCANTimeout(0);
-    }
+  @Override
+  public void setDriveOpenLoop(double output) {
+    driveSpark.setVoltage(output);
+  }
 
-    @Override
-    /**
-     * Update and logs the inputs
-     * 
-     * @param inputs
-     */
-    public void updateInputs(ModuleIOInputs inputs) {
-        inputs.drivePositionRad =
-            Units.rotationsToRadians(driveDerivedVelocityController.getPosition())
-                / DriveConstants.Config.kDriveReduction;
+  @Override
+  public void setTurnOpenLoop(double output) {
+    steerSpark.setVoltage(output);
+  }
 
-        inputs.driveVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
-            driveDerivedVelocityController.getVelocity())
-            / DriveConstants.Config.kDriveReduction;
+  @Override
+  public void setDriveVelocity(double velocityRadPerSec) {
+    double ffVolts = Tunings.driveKs * Math.signum(velocityRadPerSec) + Tunings.driveKv * velocityRadPerSec;
+    driveController.setSetpoint(
+        velocityRadPerSec,
+        ControlType.kVelocity,
+        ClosedLoopSlot.kSlot0,
+        ffVolts,
+        ArbFFUnits.kVoltage);
+  }
 
-        inputs.driveVelocityFilteredRadPerSec =
-            Units.rotationsPerMinuteToRadiansPerSecond(
-                driveEncoder.getVelocity()) / DriveConstants.Config.kDriveReduction;
-
-        inputs.driveAppliedVolts =
-            driveMotor.getAppliedOutput() * RobotController.getBatteryVoltage();
-            
-        inputs.driveCurrentAmps = new double[] {driveMotor.getOutputCurrent()};
-
-        inputs.driveTempCelcius =
-            new double[] {driveMotor.getMotorTemperature()};
-
-        inputs.turnAbsolutePositionRad =
-            new Rotation2d(absoluteEncoder.getPosition().getValue())
-                .minus(absoluteEncoderOffset).getRadians();
-        inputs.turnPositionRad =
-            Units.rotationsToRadians(angleEncoder.getPosition())
-                / DriveConstants.Config.kAngleReduction;
-        inputs.turnVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
-            angleEncoder.getVelocity()) / DriveConstants.Config.kAngleReduction;
-        inputs.turnAppliedVolts =
-            angleMotor.getAppliedOutput() * RobotController.getBatteryVoltage();
-        inputs.turnCurrentAmps = new double[] {angleMotor.getOutputCurrent()};
-        inputs.turnTempCelcius = new double[] {angleMotor.getMotorTemperature()};
-    }
-
-    @Override
-    public void setDriveVoltage(double volts) {
-        driveMotor.setVoltage(volts);
-    }
-
-    @Override
-    public void setTurnVoltage(double volts) {
-        angleMotor.setVoltage(volts);
-    }
+  @Override
+  public void setTurnPosition(Rotation2d rotation) {
+    double setpoint =
+        MathUtil.inputModulus(
+            rotation.plus(zeroRotation).getRadians(), -Math.PI, Math.PI);
+    steerController.setSetpoint(setpoint, ControlType.kPosition);
+  }
 }
