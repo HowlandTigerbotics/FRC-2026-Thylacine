@@ -82,13 +82,13 @@ public class Drive extends SubsystemBase {
         trackWidthX = Units.inchesToMeters(25.0);
         trackWidthY = Units.inchesToMeters(24.0);
 
-        driveKp = DriveConstants.Physical.Tunings.driveKp;
-        driveKd = DriveConstants.Physical.Tunings.driveKd;
-        driveKs = DriveConstants.Physical.Tunings.driveKs;
-        driveKv = DriveConstants.Physical.Tunings.driveKv;
+        driveKp = DriveConstants.Tunings.driveKp;
+        driveKd = DriveConstants.Tunings.driveKd;
+        driveKs = DriveConstants.Tunings.driveKs;
+        driveKv = DriveConstants.Tunings.driveKv;
 
-        turnKp = DriveConstants.Physical.Tunings.turnKp;
-        turnKd = DriveConstants.Physical.Tunings.turnKd;
+        turnKp = DriveConstants.Tunings.turnKp;
+        turnKd = DriveConstants.Tunings.turnKd;
         break;
       case ROBOT_SIMBOT:
         maxLinearSpeed = Units.feetToMeters(14.5);
@@ -96,13 +96,13 @@ public class Drive extends SubsystemBase {
         trackWidthX = 0.65;
         trackWidthY = 0.65;
 
-        driveKp = DriveConstants.Simulation.Tunings.driveKp;
-        driveKd = DriveConstants.Simulation.Tunings.driveKd;
-        driveKs = DriveConstants.Simulation.Tunings.driveKs;
-        driveKv = DriveConstants.Simulation.Tunings.driveKv;
+        driveKp = DriveConstants.Tunings.driveKp;
+        driveKd = DriveConstants.Tunings.driveKd;
+        driveKs = DriveConstants.Tunings.driveKs;
+        driveKv = DriveConstants.Tunings.driveKv;
 
-        turnKp = DriveConstants.Simulation.Tunings.turnKp;
-        turnKd = DriveConstants.Simulation.Tunings.turnKd;
+        turnKp = DriveConstants.Tunings.turnKp;
+        turnKd = DriveConstants.Tunings.turnKd;
         break;
       default:
         maxLinearSpeed = 0.0;
@@ -125,7 +125,7 @@ public class Drive extends SubsystemBase {
     for (int i = 0; i < 4; i++) {
       driveFeedback[i] = new PIDController(driveKp, 0.0, driveKd,
           DriveConstants.loopPeriodSecs);
-      turnFeedback[i] = new PIDController(turnKp.get(), 0.0, turnKd.get(),
+      turnFeedback[i] = new PIDController(turnKp, 0.0, turnKd,
       DriveConstants.loopPeriodSecs);
       turnFeedback[i].enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -143,19 +143,6 @@ public class Drive extends SubsystemBase {
       moduleIOs[i].updateInputs(moduleInputs[i]);
       Logger.processInputs("Drive/Module" + Integer.toString(i),
           moduleInputs[i]);
-    }
-
-    // Update objects based on TunableNumbers
-    if (driveKp.hasChanged() || driveKd.hasChanged() || driveKs.hasChanged()
-        || driveKv.hasChanged() || turnKp.hasChanged() || turnKd.hasChanged()) {
-      driveFeedforward =
-          new SimpleMotorFeedforward(driveKs.get(), driveKv.get());
-      for (int i = 0; i < 4; i++) {
-        driveFeedback[i].setP(driveKp.get());
-        driveFeedback[i].setD(driveKd.get());
-        turnFeedback[i].setP(turnKp.get());
-        turnFeedback[i].setD(turnKd.get());
-      }
     }
 
     // Update angle measurements

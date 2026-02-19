@@ -14,10 +14,7 @@ import edu.wpi.first.math.util.Units;
 public class DriveConstants {
 
     public static final double loopPeriodSecs = 0.02;
-
-    public static final class Physical {
         
-
         /**
          * Physical configurations of the motors
          */
@@ -101,21 +98,5 @@ public class DriveConstants {
          */
         public static enum ModuleIndex {
         FL, FR, BL, BR;
-    }
-    }
-
-    public static final class Simulation {
-        /**
-         * Holds tunings for the motor controllers
-         */
-        public static final class Tunings {
-            public static final double driveKp = 0.1;
-            public static final double driveKd = 0.0113;
-            public static final double driveKs = 0;
-            public static final double driveKv = 0;
-            
-            public static final double turnKp = 11;
-            public static final double turnKd = 0;
-        }
     }
 }
