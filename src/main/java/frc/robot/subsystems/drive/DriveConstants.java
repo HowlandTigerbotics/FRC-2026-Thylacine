@@ -36,14 +36,14 @@ public class DriveConstants {
         new Translation2d(-trackWidthMeters / 2.0, -wheelBaseMeters / 2.0)
     };
 
-    public static final double wheelRadiusMeters = Units.inchesToMeters(1.5);
+    public static final double wheelRadiusMeters = Units.inchesToMeters(1.9375); //CORRECT wheel radius
 
     public static final DCMotor driveGearbox = DCMotor.getNEO(1);
-    public static final double driveMotorReduction = (45.0 * 22.0) / (14.0 * 15.0); // MAXSwerve with 14 pinion teeth
+    public static final double driveMotorReduction =  8.14;  //(45.0 * 22.0) / (14.0 * 15.0); // MAXSwerve with 14 pinion teeth
     // and 22 spur teeth
 
     public static final DCMotor steerGearbox = DCMotor.getNEO(1);
-    public static final double steerMotorReduction = 9424.0 / 203.0;
+    public static final double steerMotorReduction = 150.0 / 7.0; //CORRECT reduction ratio
 
     // Drive encoder configuration
     public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction; // Rotor Rotations ->
@@ -73,7 +73,7 @@ public class DriveConstants {
     public static final double maxSpeedMetersPerSec = 4.8;
 
     // Drive motor configuration
-    public static final int driveMotorCurrentLimit = 40;
+    public static final int driveMotorCurrentLimit = 30;
     public static final double driveMotorNominalVoltage = 12.0;
 
     // Steer motor configuration
