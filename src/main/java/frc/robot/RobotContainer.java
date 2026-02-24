@@ -41,6 +41,8 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<Double> linearSpeedLimitChooser;
+  private final LoggedDashboardChooser<Double> angularSpeedLimitChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -98,6 +100,20 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    // Set up speed limit chooser
+    linearSpeedLimitChooser = new LoggedDashboardChooser<>("Linear Speed Limit");
+    angularSpeedLimitChooser = new LoggedDashboardChooser<>("Angular Speed Limit");
+
+    linearSpeedLimitChooser.addDefaultOption("Competition Mode", 1.0);
+    linearSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
+    linearSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
+    linearSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
+
+    angularSpeedLimitChooser.addDefaultOption("Competition Mode", 1.0);
+    angularSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
+    angularSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
+    angularSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -116,6 +132,8 @@ public class RobotContainer {
             () -> controller.getLeftY(),
             () -> controller.getLeftX(),
             () -> -controller.getRightX(),
+            () -> linearSpeedLimitChooser.get(),
+            () -> angularSpeedLimitChooser.get(),
             () -> {return isFieldRelative;}));
 
     // Lock to 0° when A button is held
@@ -126,6 +144,8 @@ public class RobotContainer {
                 drive,
                 () -> controller.getLeftY(),
                 () -> controller.getLeftX(),
+                () -> linearSpeedLimitChooser.get(),
+                () -> angularSpeedLimitChooser.get(),
                 () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
