@@ -45,7 +45,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
 
-  private boolean isFieldRelative = true;
+  private boolean isFieldRelative = false;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -148,8 +148,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> controller.getLeftY(),
-            () -> controller.getLeftX(),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
             () -> -controller.getRightX(),
             () -> linearSpeedLimitChooser.get(),
             () -> angularSpeedLimitChooser.get(),
@@ -161,8 +161,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> controller.getLeftY(),
-                () -> controller.getLeftX(),
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
                 () -> linearSpeedLimitChooser.get(),
                 () -> angularSpeedLimitChooser.get(),
                 () -> Rotation2d.kZero));
