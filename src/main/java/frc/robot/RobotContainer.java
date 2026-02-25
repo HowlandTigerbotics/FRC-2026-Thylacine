@@ -1,44 +1,24 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot;
 
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import org.photonvision.PhotonCamera;
+import static frc.robot.subsystems.vision.VisionConstants.*;
 
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.UsbCamera;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.net.PortForwarder;
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.Mode;
-import frc.robot.commands.DriveWithJoysticks;
-import frc.robot.commands.DriveWithValue;
-import frc.robot.commands.DriveWithJoysticks.JoystickMode;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIONavX2;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOSparkMAX;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
-import frc.robot.util.GeomUtil;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
+import frc.robot.subsystems.drive.DemoDrive;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -47,129 +27,86 @@ import frc.robot.util.GeomUtil;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  private final Vision vision;
 
-  public static final Pose2d autoDriveTarget =
-      new Pose2d(4.0, 2.0, new Rotation2d());
-
-  private PhotonCamera cam;
-
-  // Subsystems
-  private Drive drive;
-
-  private DigitalInput limitSwitch = new DigitalInput(0);
-
-  // OI objects
-  private XboxController driverController = new XboxController(0);
-  private boolean isFieldRelative = true;
-
-  private final LoggedDashboardChooser<JoystickMode> joystickModeChooser =
-      new LoggedDashboardChooser<>("Linear Speed Limit");
-  private final LoggedDashboardChooser<Double> demoLinearSpeedLimitChooser =
-      new LoggedDashboardChooser<>("Linear Speed Limit");
-  private final LoggedDashboardChooser<Double> demoAngularSpeedLimitChooser =
-      new LoggedDashboardChooser<>("Angular Speed Limit");
+  private final DemoDrive drive = new DemoDrive(); // Demo drive subsystem, sim only
+  private final CommandGenericHID keyboard = new CommandGenericHID(0); // Keyboard 0 on port 0
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    CameraServer.startAutomaticCapture(0);
-    
-    PortForwarder.add(5800, "photonvision.local", 5800);
-    // Instantiate active subsystems
-    if (Constants.currentMode == Mode.REPLAY) {
-      switch (Constants.currentMode) {
-        case REAL:
-          drive = new Drive(
-            new GyroIONavX2(), 
-            new ModuleIOSparkMAX(ModuleIndex.FL),
-            new ModuleIOSparkMAX(ModuleIndex.FR), 
-            new ModuleIOSparkMAX(ModuleIndex.BL),
-            new ModuleIOSparkMAX(ModuleIndex.BR)
-          );
-          break;
-        case SIM:
-          drive = null;
-          break;
-        default:
-          break;
-      }
+    switch (Constants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        vision =
+            new Vision(
+                drive::addVisionMeasurement);
+        // vision =
+        // new Vision(
+        // demoDrive::addVisionMeasurement,
+        // new VisionIOPhotonVision(camera0Name, robotToCamera0),
+        // new VisionIOPhotonVision(camera1Name, robotToCamera1));
+        break;
+
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+        break;
+
+      default:
+        // Replayed robot, disable IO implementations
+        // (Use same number of dummy implementations as the real robot)
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        break;
     }
 
-    // Instantiate missing subsystems
-    drive = drive != null ? drive
-        : new Drive(new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {},
-            new ModuleIO() {}, new ModuleIO() {});
-
-
-
- 
-
-
-
-    // Set up choosers
-    joystickModeChooser.addDefaultOption("Standard", JoystickMode.Standard);
-    joystickModeChooser.addOption("Tank", JoystickMode.Tank);
-    demoLinearSpeedLimitChooser.addDefaultOption("--Competition Mode--", 0.7);
-    demoLinearSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
-    demoLinearSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
-    demoLinearSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
-    demoAngularSpeedLimitChooser.addDefaultOption("--Competition Mode--", 0.7); // TODO do later
-    demoAngularSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
-    demoAngularSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
-    demoAngularSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
-
-
+    // Configure the button bindings
     configureButtonBindings();
   }
 
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses
-   * ({@link edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a
-   * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+   * instantiating a {@link GenericHID} or one of its subclasses ({@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    // Driving controls
-    new Trigger(driverController::getStartButton)
-        .or(new Trigger(driverController::getBackButton))
-        .onTrue(new InstantCommand(() -> {
-          isFieldRelative = !isFieldRelative;
-          SmartDashboard.putBoolean("Field Relative", isFieldRelative);
-        }).ignoringDisable(true));
+    // Joystick drive command
+    drive.setDefaultCommand(
+        Commands.run(
+            () -> {
+              drive.run(-keyboard.getRawAxis(1), -keyboard.getRawAxis(0));
+            },
+            drive));
 
-    
-
-    SmartDashboard.putBoolean("Field Relative", isFieldRelative);
-    drive.setDefaultCommand(new DriveWithJoysticks(drive,
-        () -> -driverController.getLeftY(), () -> -driverController.getLeftX(),
-        () -> -driverController.getRightX(), () -> !isFieldRelative,
-        () -> joystickModeChooser.get(),
-        () -> demoLinearSpeedLimitChooser.get(),
-        () -> demoAngularSpeedLimitChooser.get(),
-        () -> driverController.getRightTriggerAxis()));
-
-   
-
-
-    // Reset gyro command
-    Command resetGyroCommand = new InstantCommand(() -> {
-      drive.setPose(autoDriveTarget);
-    }, drive).ignoringDisable(true);
-    Command rumbleCommand = new StartEndCommand(
-        () -> driverController.setRumble(RumbleType.kRightRumble, 0.5),
-        () -> driverController.setRumble(RumbleType.kRightRumble, 0.0)) {
-      @Override
-      public boolean runsWhenDisabled() {
-        return true;
-      }
-    }.withTimeout(0.2);
-    new Trigger(driverController::getLeftBumper)
-        .and(new Trigger(driverController::getRightBumper))
-        .onTrue(resetGyroCommand).onTrue(rumbleCommand);
-
-    // Auto drive controls
-    // new Trigger(() -> driverController.getLeftTriggerAxis() > 0.5)
-    // .whileTrue(new AutoDriveHard(drive));
-
+    // Auto aim command example
+    @SuppressWarnings("resource")
+    PIDController aimController = new PIDController(0.2, 0.0, 0.0);
+    aimController.enableContinuousInput(-Math.PI, Math.PI);
+    keyboard.button(1).whileTrue(Commands.runOnce(
+      () -> {System.out.println("A");}
+     ));
+    keyboard.button(1)
+        .whileTrue(
+            Commands.startRun(
+                () -> {
+                  aimController.reset();
+                },
+                () -> {
+                  drive.run(0.0, aimController.calculate(vision.getTargetX(0).getRadians()));
+                },
+                drive));
   }
 
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return Commands.none();
+  }
 }
