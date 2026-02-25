@@ -1,8 +1,6 @@
 package frc.robot.util;
 
 
-import frc.robot.constants.RobotConstants;
-
 /**
  * Class for a tunable number. Gets value from dashboard in tuning mode, returns default if not or
  * value not in dashboard.
@@ -44,9 +42,6 @@ public class LoggedTunableNumber {
     if (!hasDefault) {
       hasDefault = true;
       this.defaultValue = defaultValue;
-      if (RobotConstants.tuningMode) {
-        
-      }
     }
   }
 

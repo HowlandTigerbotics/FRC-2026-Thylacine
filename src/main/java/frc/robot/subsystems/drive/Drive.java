@@ -20,7 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.RobotConstants;
+import frc.robot.Constants;
 import frc.robot.util.GeomUtil;
 import frc.robot.util.LoggedTunableNumber;
 
@@ -75,8 +75,8 @@ public class Drive extends SubsystemBase {
     moduleIOs[2] = blModuleIO;
     moduleIOs[3] = brModuleIO;
 
-    switch (RobotConstants.getRobot()) {
-      case ROBOT_2025S:
+    switch (Constants.currentMode) {
+      case REAL:
         maxLinearSpeed = Units.feetToMeters(14.5);
         wheelRadius = Units.inchesToMeters(2.0);
         trackWidthX = Units.inchesToMeters(25.0);
@@ -90,7 +90,7 @@ public class Drive extends SubsystemBase {
         turnKp = DriveConstants.Tunings.turnKp;
         turnKd = DriveConstants.Tunings.turnKd;
         break;
-      case ROBOT_SIMBOT:
+      case SIM:
         maxLinearSpeed = Units.feetToMeters(14.5);
         wheelRadius = Units.inchesToMeters(2.0);
         trackWidthX = 0.65;

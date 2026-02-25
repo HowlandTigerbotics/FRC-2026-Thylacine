@@ -13,8 +13,8 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.constants.RobotConstants;
-import frc.robot.constants.RobotConstants.RobotType;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
 import frc.robot.util.SparkMaxDerivedVelocityController;
 
@@ -44,7 +44,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
      * @throws RuntimeException if RobotState is not physical
      */
     public ModuleIOSparkMAX(ModuleIndex index) {
-        if (RobotConstants.getRobot() == RobotType.ROBOT_2025S) {
+        if (Constants.currentMode == Mode.REAL) {
             switch (index) {
                 case FL:
                     driveMotor = new SparkMax(

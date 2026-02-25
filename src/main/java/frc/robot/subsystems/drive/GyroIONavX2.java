@@ -9,7 +9,7 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.constants.RobotConstants;
+import frc.robot.Constants;
 
 /** IO implementation for Pigeon2 */
 public class GyroIONavX2 implements GyroIO {
@@ -17,8 +17,8 @@ public class GyroIONavX2 implements GyroIO {
   private final double[] xyzDps = new double[3];
 
   public GyroIONavX2() {
-    switch (RobotConstants.getRobot()) {
-      case ROBOT_2025S:
+    switch (Constants.currentMode) {
+      case REAL:
         gyro = new AHRS(NavXComType.kMXP_SPI);
         break;
       default:

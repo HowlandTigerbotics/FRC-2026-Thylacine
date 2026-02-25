@@ -25,20 +25,17 @@ import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.constants.RobotConstants;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveWithJoysticks;
 import frc.robot.commands.DriveWithValue;
-import frc.robot.commands.WinchStop;
 import frc.robot.commands.DriveWithJoysticks.JoystickMode;
-import frc.robot.constants.FieldConstants;
-import frc.robot.subsystems.Winch;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
-import frc.robot.subsystems.drive.DriveConstants.ModuleIndex;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
 import frc.robot.util.GeomUtil;
@@ -58,7 +55,6 @@ public class RobotContainer {
 
   // Subsystems
   private Drive drive;
-  private Winch winch;
 
   private DigitalInput limitSwitch = new DigitalInput(0);
 
@@ -66,9 +62,6 @@ public class RobotContainer {
   private XboxController driverController = new XboxController(0);
   private boolean isFieldRelative = true;
 
-  // Choosers
-  private final LoggedDashboardChooser<AutoRoutine> autoChooser =
-      new LoggedDashboardChooser<>("Auto Routine");
   private final LoggedDashboardChooser<JoystickMode> joystickModeChooser =
       new LoggedDashboardChooser<>("Linear Speed Limit");
   private final LoggedDashboardChooser<Double> demoLinearSpeedLimitChooser =
@@ -82,9 +75,9 @@ public class RobotContainer {
     
     PortForwarder.add(5800, "photonvision.local", 5800);
     // Instantiate active subsystems
-    if (RobotConstants.getMode() != RobotConstants.Mode.REPLAY) {
-      switch (RobotConstants.getRobot()) {
-        case ROBOT_2025S:
+    if (Constants.currentMode == Mode.REPLAY) {
+      switch (Constants.currentMode) {
+        case REAL:
           drive = new Drive(
             new GyroIONavX2(), 
             new ModuleIOSparkMAX(ModuleIndex.FL),
@@ -93,7 +86,7 @@ public class RobotContainer {
             new ModuleIOSparkMAX(ModuleIndex.BR)
           );
           break;
-        case ROBOT_SIMBOT:
+        case SIM:
           drive = null;
           break;
         default:
@@ -105,24 +98,8 @@ public class RobotContainer {
     drive = drive != null ? drive
         : new Drive(new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {},
             new ModuleIO() {}, new ModuleIO() {});
-    winch = new Winch();
 
-    // Set up auto routines
-    autoChooser.addDefaultOption("Do Nothing",
-        new AutoRoutine(AutoPosition.ORIGIN, new InstantCommand()));
-    autoChooser.addOption("Move Forward WIP", new AutoRoutine(
-      AutoPosition.ORIGIN,
-          new DriveWithValue(
-            drive, 
-            0, 
-            0.3, 
-            0, 
-            isFieldRelative, 
-            null, 
-            0.7, 
-            0.7, 
-            0.7).withTimeout(5)
-      ));
+
 
  
 
@@ -140,11 +117,6 @@ public class RobotContainer {
     demoAngularSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
     demoAngularSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
 
-    // Alert if in tuning mode
-    if (RobotConstants.tuningMode) {
-      new Alert("Tuning mode active, expect decreased network performance.",
-          AlertType.INFO).set(true);
-    }
 
     configureButtonBindings();
   }
@@ -175,15 +147,7 @@ public class RobotContainer {
         () -> demoAngularSpeedLimitChooser.get(),
         () -> driverController.getRightTriggerAxis()));
 
-    winch.setDefaultCommand(new WinchStop(winch));
-    new Trigger(driverController::getAButton).whileTrue(new RunCommand(
-      (() -> {winch.A();}), winch
-    ));
-
-    new Trigger(driverController::getYButton).whileTrue(new RunCommand(
-      () -> { winch.Y(); }, winch
-    ));
-
+   
 
 
     // Reset gyro command
@@ -208,61 +172,4 @@ public class RobotContainer {
 
   }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    AutoRoutine routine = autoChooser.get();
-    drive.setPose(routine.position.getPose());
-    return routine.command;
-  }
-
-  private static class AutoRoutine {
-    public final AutoPosition position;
-    public final Command command;
-
-    public AutoRoutine(AutoPosition position, Command command) {
-      this.position = position;
-      this.command = command;
-    }
-  }
-
-  public static enum AutoPosition {
-    ORIGIN, TARMAC_A, TARMAC_B, TARMAC_C, TARMAC_D, FENDER_A, FENDER_A_REVERSED, FENDER_B, FENDER_B_REVERSED;
-
-    public Pose2d getPose() {
-      switch (this) {
-        case ORIGIN:
-          return new Pose2d();
-        case TARMAC_A:
-          return FieldConstants.referenceA
-              .transformBy(GeomUtil.transformFromTranslation(-0.5, 0.7));
-        case TARMAC_B:
-          return FieldConstants.referenceB
-              .transformBy(GeomUtil.transformFromTranslation(-0.5, -0.2));
-        case TARMAC_C:
-          return FieldConstants.referenceC
-              .transformBy(GeomUtil.transformFromTranslation(-0.5, -0.1));
-        case TARMAC_D:
-          return FieldConstants.referenceD
-              .transformBy(GeomUtil.transformFromTranslation(-0.5, -0.7));
-        case FENDER_A:
-          return FieldConstants.fenderA
-              .transformBy(GeomUtil.transformFromTranslation(0.5, 0.0));
-        case FENDER_A_REVERSED:
-          return FieldConstants.fenderA.transformBy(new Transform2d(
-              new Translation2d(0.5, 0.0), Rotation2d.fromDegrees(180.0)));
-        case FENDER_B:
-          return FieldConstants.fenderB
-              .transformBy(GeomUtil.transformFromTranslation(0.5, 0.0));
-        case FENDER_B_REVERSED:
-          return FieldConstants.fenderB.transformBy(new Transform2d(
-              new Translation2d(0.5, 0.0), Rotation2d.fromDegrees(180.0)));
-        default:
-          return new Pose2d();
-      }
-    }
-  }
 }
