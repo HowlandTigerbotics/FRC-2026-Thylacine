@@ -77,7 +77,7 @@ public class DriveConstants {
     public static final double driveMotorNominalVoltage = 12.0;
 
     // Steer motor configuration
-    public static final boolean steerInverted = false;
+    public static final boolean steerInverted = true;
     public static final int steerMotorCurrentLimit = 30;
     public static final double steerMotorNominalVoltage = 12.0;
 

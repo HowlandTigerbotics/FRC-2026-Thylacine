@@ -195,7 +195,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
     ifOk(
         steerSpark,
         steerEncoder::getPosition,
-        (value) -> inputs.steerPosition = new Rotation2d(value).minus(zeroRotation));
+        (value) -> inputs.steerPosition = new Rotation2d(value).minus(Rotation2d.kZero));
     ifOk(steerSpark, steerEncoder::getVelocity, (value) -> inputs.steerVelocityRadPerSec = value);
     ifOk(
         steerSpark,
