@@ -8,6 +8,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -23,6 +25,13 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -34,6 +43,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final Vision vision;
+
   private boolean isFieldRelative = true;
 
   // Controller
@@ -56,6 +67,10 @@ public class RobotContainer {
                 new ModuleIOSparkMAX(1),
                 new ModuleIOSparkMAX(2),
                 new ModuleIOSparkMAX(3));
+        vision = new Vision(
+          drive::addVisionMeasurement
+        );
+        // TODO: add cameras to vision
         break;
 
       case SIM:
@@ -67,6 +82,9 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
+        vision = new Vision(
+          drive::addVisionMeasurement,
+          new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
         break;
 
       default:
@@ -78,6 +96,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
 
@@ -169,6 +188,20 @@ public class RobotContainer {
        Commands.runOnce(
         () -> {isFieldRelative = !isFieldRelative;}) 
       );
+
+    PIDController aimController = new PIDController(0.2, 0.0, 0.0);
+    aimController.enableContinuousInput(-Math.PI, Math.PI);
+    controller.x().whileTrue(
+      Commands.runOnce(
+        () -> {aimController.reset();}
+      ).andThen(DriveCommands.joystickDrive(
+                  drive,
+                  () -> 0,
+                  () -> 0,
+                  () -> aimController.calculate(vision.getTargetX(0).getRadians()),
+                  () -> 1.0,
+                  () -> 1.0,
+                  () -> true)));
   }
 
   /**
