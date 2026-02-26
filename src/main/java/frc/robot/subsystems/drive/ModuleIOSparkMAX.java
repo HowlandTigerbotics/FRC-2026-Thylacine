@@ -27,6 +27,11 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.drive.DriveConstants.Config;
+import frc.robot.subsystems.drive.DriveConstants.Physical;
+import frc.robot.subsystems.drive.DriveConstants.Ports;
+import frc.robot.subsystems.drive.DriveConstants.Tunings;
+
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
@@ -173,7 +178,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
     // Reset Encoders
     driveEncoder.setPosition(0.0);
     steerEncoder.setPosition(
-        absoluteEncoder.getPosition().getValueAsDouble()
+        absoluteEncoder.getPosition().getValueAsDouble() * Physical.steerMotorReduction
     );
   }
 
