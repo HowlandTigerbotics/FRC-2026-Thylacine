@@ -36,7 +36,8 @@ import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 /**
- * Module IO implementation for Spark Flex drive motor controller, Spark Max steer motor controller,
+ * Module IO implementation for Spark Flex drive motor controller, Spark Max
+ * steer motor controller,
  * and duty cycle absolute encoder.
  */
 public class ModuleIOSparkMAX implements ModuleIO {
@@ -59,65 +60,71 @@ public class ModuleIOSparkMAX implements ModuleIO {
   private final Queue<Double> steerPositionQueue;
 
   // Connection debouncers
-  private final Debouncer driveConnectedDebounce =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-  private final Debouncer steerConnectedDebounce =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer driveConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer steerConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public ModuleIOSparkMAX(int module) {
     zeroRotation = Rotation2d.kZero;
-    driveSpark =
-        new SparkMax(
-            switch (module) {
-              case 0 -> Ports.FRONT_LEFT_DRIVE_MOTOR_PORT;
-              case 1 -> Ports.FRONT_RIGHT_DRIVE_MOTOR_PORT;
-              case 2 -> Ports.BACK_LEFT_DRIVE_MOTOR_PORT;
-              case 3 -> Ports.BACK_RIGHT_DRIVE_MOTOR_PORT;
-              default -> 0;
-            },
-            MotorType.kBrushless);
-    steerSpark =
-        new SparkMax(
-            switch (module) {
-              case 0 -> Ports.FRONT_LEFT_STEER_MOTOR_PORT;
-              case 1 -> Ports.FRONT_RIGHT_STEER_MOTOR_PORT;
-              case 2 -> Ports.BACK_LEFT_STEER_MOTOR_PORT;
-              case 3 -> Ports.BACK_RIGHT_STEER_MOTOR_PORT;
-              default -> 0;
-            },
-            MotorType.kBrushless);
+    driveSpark = new SparkMax(
+        switch (module) {
+          case 0 -> Ports.FRONT_LEFT_DRIVE_MOTOR_PORT;
+          case 1 -> Ports.FRONT_RIGHT_DRIVE_MOTOR_PORT;
+          case 2 -> Ports.BACK_LEFT_DRIVE_MOTOR_PORT;
+          case 3 -> Ports.BACK_RIGHT_DRIVE_MOTOR_PORT;
+          default -> 0;
+        },
+        MotorType.kBrushless);
+    steerSpark = new SparkMax(
+        switch (module) {
+          case 0 -> Ports.FRONT_LEFT_STEER_MOTOR_PORT;
+          case 1 -> Ports.FRONT_RIGHT_STEER_MOTOR_PORT;
+          case 2 -> Ports.BACK_LEFT_STEER_MOTOR_PORT;
+          case 3 -> Ports.BACK_RIGHT_STEER_MOTOR_PORT;
+          default -> 0;
+        },
+        MotorType.kBrushless);
     absoluteEncoder = new CANcoder(
         switch (module) {
-            case 0 -> Ports.FRONT_LEFT_ABSOLUTE_ENCODER_PORT;
-            case 1 -> Ports.FRONT_RIGHT_ABSOLUTE_ENCODER_PORT;
-            case 2 -> Ports.BACK_LEFT_ABSOLUTE_ENCODER_PORT;
-            case 3 -> Ports.BACK_RIGHT_ABSOLUTE_ENCODER_PORT;
-            default -> 0;
-        }
-    );
+          case 0 -> Ports.FRONT_LEFT_ABSOLUTE_ENCODER_PORT;
+          case 1 -> Ports.FRONT_RIGHT_ABSOLUTE_ENCODER_PORT;
+          case 2 -> Ports.BACK_LEFT_ABSOLUTE_ENCODER_PORT;
+          case 3 -> Ports.BACK_RIGHT_ABSOLUTE_ENCODER_PORT;
+          default -> 0;
+        });
     driveEncoder = driveSpark.getEncoder();
     steerEncoder = steerSpark.getEncoder();
     driveController = driveSpark.getClosedLoopController();
     steerController = steerSpark.getClosedLoopController();
 
+    configureMotors();
+
+    // Create odometry queues
+    timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+    drivePositionQueue = SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
+    steerPositionQueue = SparkOdometryThread.getInstance().registerSignal(steerSpark, steerEncoder::getPosition);
+
+    // Reset Encoders
+    driveEncoder.setPosition(0.0);
+    steerEncoder.setPosition(
+        absoluteEncoder.getPosition().getValueAsDouble() * Physical.steerMotorReduction);
+  }
+
+  private void configureMotors() {
     // Configure drive motor
     var driveConfig = new SparkMaxConfig();
     driveConfig
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(Config.driveMotorCurrentLimit)
         .voltageCompensation(12.0);
-    driveConfig
-        .encoder
+    driveConfig.encoder
         .positionConversionFactor(Physical.driveEncoderPositionFactor)
         .velocityConversionFactor(Physical.driveEncoderVelocityFactor)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
-    driveConfig
-        .closedLoop
+    driveConfig.closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pid(Tunings.driveKp, 0.0, Tunings.driveKd);
-    driveConfig
-        .signals
+    driveConfig.signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
         .primaryEncoderVelocityAlwaysOn(true)
@@ -128,9 +135,8 @@ public class ModuleIOSparkMAX implements ModuleIO {
     tryUntilOk(
         driveSpark,
         5,
-        () ->
-            driveSpark.configure(
-                driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        () -> driveSpark.configure(
+            driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     tryUntilOk(driveSpark, 5, () -> driveEncoder.setPosition(0.0));
 
     // Configure steer motor
@@ -140,20 +146,17 @@ public class ModuleIOSparkMAX implements ModuleIO {
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(Config.steerMotorCurrentLimit)
         .voltageCompensation(12.0);
-    steerConfig
-        .encoder
+    steerConfig.encoder
         .positionConversionFactor(Physical.steerEncoderPositionFactor)
         .velocityConversionFactor(Physical.steerEncoderVelocityFactor)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
-    steerConfig
-        .closedLoop
+    steerConfig.closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .positionWrappingEnabled(true)
         .positionWrappingInputRange(-Math.PI, Math.PI)
         .pid(Tunings.steerKp, 0.0, Tunings.steerKd);
-    steerConfig
-        .signals
+    steerConfig.signals
         .absoluteEncoderPositionAlwaysOn(true)
         .absoluteEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
         .absoluteEncoderVelocityAlwaysOn(true)
@@ -164,22 +167,8 @@ public class ModuleIOSparkMAX implements ModuleIO {
     tryUntilOk(
         steerSpark,
         5,
-        () ->
-            steerSpark.configure(
-                steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-
-    // Create odometry queues
-    timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
-    drivePositionQueue =
-        SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
-    steerPositionQueue =
-        SparkOdometryThread.getInstance().registerSignal(steerSpark, steerEncoder::getPosition);
-
-    // Reset Encoders
-    driveEncoder.setPosition(0.0);
-    steerEncoder.setPosition(
-        absoluteEncoder.getPosition().getValueAsDouble() * Physical.steerMotorReduction
-    );
+        () -> steerSpark.configure(
+            steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
   }
 
   @Override
@@ -190,7 +179,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
     ifOk(driveSpark, driveEncoder::getVelocity, (value) -> inputs.driveVelocityRadPerSec = value);
     ifOk(
         driveSpark,
-        new DoubleSupplier[] {driveSpark::getAppliedOutput, driveSpark::getBusVoltage},
+        new DoubleSupplier[] { driveSpark::getAppliedOutput, driveSpark::getBusVoltage },
         (values) -> inputs.driveAppliedVolts = values[0] * values[1]);
     ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
     inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
@@ -204,20 +193,18 @@ public class ModuleIOSparkMAX implements ModuleIO {
     ifOk(steerSpark, steerEncoder::getVelocity, (value) -> inputs.steerVelocityRadPerSec = value);
     ifOk(
         steerSpark,
-        new DoubleSupplier[] {steerSpark::getAppliedOutput, steerSpark::getBusVoltage},
+        new DoubleSupplier[] { steerSpark::getAppliedOutput, steerSpark::getBusVoltage },
         (values) -> inputs.steerAppliedVolts = values[0] * values[1]);
     ifOk(steerSpark, steerSpark::getOutputCurrent, (value) -> inputs.steerCurrentAmps = value);
     inputs.steerConnected = steerConnectedDebounce.calculate(!sparkStickyFault);
 
     // Update odometry inputs
-    inputs.odometryTimestamps =
-        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryDrivePositionsRad =
-        drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryTurnPositions =
-        steerPositionQueue.stream()
-            .map((Double value) -> new Rotation2d(value).minus(zeroRotation))
-            .toArray(Rotation2d[]::new);
+    inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryTurnPositions = steerPositionQueue.stream()
+        .map((Double value) -> new Rotation2d(value).minus(zeroRotation))
+        .toArray(Rotation2d[]::new);
+
     timestampQueue.clear();
     drivePositionQueue.clear();
     steerPositionQueue.clear();
@@ -246,9 +233,8 @@ public class ModuleIOSparkMAX implements ModuleIO {
 
   @Override
   public void setTurnPosition(Rotation2d rotation) {
-    double setpoint =
-        MathUtil.inputModulus(
-            rotation.plus(zeroRotation).getRadians(), -Math.PI, Math.PI);
+    double setpoint = MathUtil.inputModulus(
+        rotation.plus(zeroRotation).getRadians(), -Math.PI, Math.PI);
     steerController.setSetpoint(setpoint, ControlType.kPosition);
   }
 }

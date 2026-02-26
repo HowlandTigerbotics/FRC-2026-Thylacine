@@ -191,7 +191,7 @@ public class RobotContainer {
 
     PIDController aimController = new PIDController(0.2, 0.0, 0.0);
     aimController.enableContinuousInput(-Math.PI, Math.PI);
-    controller.x().whileTrue(
+    controller.y().whileTrue(
       Commands.runOnce(
         () -> {aimController.reset();}
       ).andThen(DriveCommands.joystickDrive(
