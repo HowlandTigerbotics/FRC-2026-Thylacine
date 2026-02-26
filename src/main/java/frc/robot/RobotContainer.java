@@ -28,6 +28,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
 import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
@@ -69,7 +70,8 @@ public class RobotContainer {
                 new ModuleIOSparkMAX(2),
                 new ModuleIOSparkMAX(3));
         vision = new Vision(
-          drive::addVisionMeasurement
+          drive::addVisionMeasurement,
+          new VisionIOPhotonVision(camera0Name, robotToCamera0)
         );
         // TODO: add cameras to vision
         break;
@@ -190,7 +192,7 @@ public class RobotContainer {
         () -> {isFieldRelative = !isFieldRelative;}) 
       );
 
-
+/* 
       controller.y().whileTrue(
     DriveCommands.joystickDriveAtAngle(
         drive,
@@ -200,8 +202,8 @@ public class RobotContainer {
         () -> 1.0, // angular speed scale
         () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
     )
-);
-      /* 
+);*/
+      
     PIDController aimController = new PIDController(0.2, 0, 0);
 aimController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -219,7 +221,7 @@ controller.y().whileTrue(
         },
         drive
     ).beforeStarting(aimController::reset)
-);*/
+);
   }
 
   /**

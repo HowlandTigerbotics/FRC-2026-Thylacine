@@ -170,6 +170,12 @@ public class ModuleIOSparkMAX implements ModuleIO {
         5,
         () -> steerSpark.configure(
             steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    // Reset Encoders
+    driveEncoder.setPosition(0.0);
+    steerEncoder.setPosition(
+        absoluteEncoder.getAbsolutePosition().getValueAsDouble());
+  
   }
 
   @Override
