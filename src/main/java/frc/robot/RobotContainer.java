@@ -12,6 +12,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -189,19 +190,36 @@ public class RobotContainer {
         () -> {isFieldRelative = !isFieldRelative;}) 
       );
 
-    PIDController aimController = new PIDController(0.2, 0.0, 0.0);
-    aimController.enableContinuousInput(-Math.PI, Math.PI);
-    controller.y().whileTrue(
-      Commands.runOnce(
-        () -> {aimController.reset();}
-      ).andThen(DriveCommands.joystickDrive(
-                  drive,
-                  () -> 0,
-                  () -> 0,
-                  () -> aimController.calculate(vision.getTargetX(0).getRadians()),
-                  () -> 1.0,
-                  () -> 1.0,
-                  () -> true)));
+
+      controller.y().whileTrue(
+    DriveCommands.joystickDriveAtAngle(
+        drive,
+        () -> 0.0, // no translation X
+        () -> 0.0, // no translation Y
+        () -> 1.0, // linear speed scale
+        () -> 1.0, // angular speed scale
+        () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
+    )
+);
+      /* 
+    PIDController aimController = new PIDController(0.2, 0, 0);
+aimController.enableContinuousInput(-Math.PI, Math.PI);
+
+controller.y().whileTrue(
+    Commands.run(
+        () -> {
+            double omega = aimController.calculate(
+                vision.getTargetX(0).getRadians(),
+                0.0
+            );
+
+            drive.runVelocity(
+                new ChassisSpeeds(0.0, 0.0, omega)
+            );
+        },
+        drive
+    ).beforeStarting(aimController::reset)
+);*/
   }
 
   /**
