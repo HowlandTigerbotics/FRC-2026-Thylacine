@@ -129,7 +129,7 @@ public class DriveConstants {
 
     // Steer PID configuration
     public static final double steerKp = 2.0;
-    public static final double steerKd = 0.0;
+    public static final double steerKd = 0;
     public static final double steerSimP = 8.0;
     public static final double steerSimD = 0.0;
     public static final double steerPIDMinInput = 0; // Radians

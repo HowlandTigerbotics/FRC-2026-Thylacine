@@ -151,9 +151,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX(),
+            () -> controller.getLeftY(),
+            () -> controller.getLeftX(),
+            () -> controller.getRightX(),
             () -> linearSpeedLimitChooser.get(),
             () -> angularSpeedLimitChooser.get(),
             () -> {return isFieldRelative;}));
@@ -164,8 +164,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
+                () -> controller.getLeftY(),
+                () -> controller.getLeftX(),
                 () -> linearSpeedLimitChooser.get(),
                 () -> angularSpeedLimitChooser.get(),
                 () -> Rotation2d.kZero));
@@ -192,18 +192,19 @@ public class RobotContainer {
         () -> {isFieldRelative = !isFieldRelative;}) 
       );
 
-/* 
+
       controller.y().whileTrue(
     DriveCommands.joystickDriveAtAngle(
         drive,
         () -> 0.0, // no translation X
         () -> 0.0, // no translation Y
         () -> 1.0, // linear speed scale
-        () -> 1.0, // angular speed scale
+        () -> 0.7, // angular speed scale
         () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
     )
-);*/
+);
       
+/* 
     PIDController aimController = new PIDController(0.2, 0, 0);
 aimController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -221,7 +222,8 @@ controller.y().whileTrue(
         },
         drive
     ).beforeStarting(aimController::reset)
-);
+    
+);*/
   }
 
   /**

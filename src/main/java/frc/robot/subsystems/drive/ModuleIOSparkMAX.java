@@ -27,6 +27,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.DriveConstants.Config;
 import frc.robot.subsystems.drive.DriveConstants.Physical;
 import frc.robot.subsystems.drive.DriveConstants.Ports;
@@ -42,6 +43,7 @@ import java.util.function.DoubleSupplier;
  */
 public class ModuleIOSparkMAX implements ModuleIO {
   private final Rotation2d zeroRotation;
+  private final int index;
 
   // Hardware objects
   private final SparkBase driveSpark;
@@ -64,6 +66,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
   private final Debouncer steerConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   public ModuleIOSparkMAX(int module) {
+    index = module;
     zeroRotation = Rotation2d.kZero;
     driveSpark = new SparkMax(
         switch (module) {
@@ -103,10 +106,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
     drivePositionQueue = SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
     steerPositionQueue = SparkOdometryThread.getInstance().registerSignal(steerSpark, steerEncoder::getPosition);
 
-    // Reset Encoders
-    driveEncoder.setPosition(0.0);
-    steerEncoder.setPosition(
-        absoluteEncoder.getPosition().getValueAsDouble() * Physical.steerMotorReduction);
+    
   }
 
   private void configureMotors() {
@@ -114,7 +114,7 @@ public class ModuleIOSparkMAX implements ModuleIO {
     var driveConfig = new SparkMaxConfig();
     driveConfig
         .idleMode(IdleMode.kBrake)
-        .inverted(false)
+        .inverted(index == 2)
         .smartCurrentLimit(Config.driveMotorCurrentLimit)
         .voltageCompensation(12.0);
     driveConfig.encoder
@@ -170,12 +170,11 @@ public class ModuleIOSparkMAX implements ModuleIO {
         5,
         () -> steerSpark.configure(
             steerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-
+    
     // Reset Encoders
-    driveEncoder.setPosition(0.0);
-    steerEncoder.setPosition(
-        absoluteEncoder.getAbsolutePosition().getValueAsDouble());
-  
+    tryUntilOk(steerSpark, 5, () -> steerEncoder.setPosition(
+        Units.rotationsToRadians(absoluteEncoder.getPosition().getValueAsDouble()))
+    );
   }
 
   @Override
