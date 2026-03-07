@@ -23,7 +23,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
  * @since 2/5/2026
  */
 public interface ModuleIO {
-
     @AutoLog
     public static class ModuleIOInputs {
         public boolean driveConnected = false;

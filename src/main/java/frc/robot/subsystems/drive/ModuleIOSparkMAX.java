@@ -157,11 +157,11 @@ public class ModuleIOSparkMAX implements ModuleIO {
         .positionWrappingEnabled(true)
         .positionWrappingInputRange(-Math.PI, Math.PI)
         .pid(Tunings.steerKp, 0.0, Tunings.steerKd);
-    steerConfig.signals
-        .absoluteEncoderPositionAlwaysOn(true)
-        .absoluteEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
-        .absoluteEncoderVelocityAlwaysOn(true)
-        .absoluteEncoderVelocityPeriodMs(20)
+    steerConfig.signals // TODO: Changed this so no longer uses abs.
+        .primaryEncoderPositionAlwaysOn(true)
+        .primaryEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
+        .primaryEncoderVelocityAlwaysOn(true)
+        .primaryEncoderVelocityPeriodMs(20)
         .appliedOutputPeriodMs(20)
         .busVoltagePeriodMs(20)
         .outputCurrentPeriodMs(20);
