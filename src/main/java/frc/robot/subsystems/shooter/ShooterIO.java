@@ -22,10 +22,13 @@ public interface ShooterIO {
     }
 
     /** Run the shooter motor at the specified open loop value. */
-    public default void setDriveOpenLoop(double output) {
+    public default void setShooterOpenLoop(double output) {
     }
 
      /** Run the shooter motor at the specified velocity. */
     public default void setShooterVelocity(double velocityRadPerSec) {
+    }
+
+    public default void setShooterSpeed(double speed) {
     }
 }

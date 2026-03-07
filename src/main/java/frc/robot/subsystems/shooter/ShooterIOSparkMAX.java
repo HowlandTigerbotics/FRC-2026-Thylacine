@@ -104,4 +104,9 @@ public class ShooterIOSparkMAX implements ShooterIO{
         ffVolts,
         ArbFFUnits.kVoltage);
   }
+
+  @Override
+  public void setShooterSpeed(double speed) {
+    shooterSpark.set(speed);
+  }
 }
