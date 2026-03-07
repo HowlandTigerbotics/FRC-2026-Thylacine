@@ -28,7 +28,7 @@ public class TurretConstants {
     }
 
     public static final class Ports {
-        public static final int TURRET_PORT_ID = 21;
+        public static final int TURRET_PORT_ID = 18;
     }
 
     public static final class Tunings {

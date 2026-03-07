@@ -40,7 +40,11 @@ public class Shooter extends SubsystemBase {
     shooterIO.setShooterVelocity(velocityRadPerSec);
   }
 
-  public void setSpeed(double speed) {
+  public void setShooterSpeed(double speed) {
     shooterIO.setShooterSpeed(speed);
+  }
+
+  public void setFeedSpeed(double speed) {
+    shooterIO.setFeedSpeed(speed);
   }
 }

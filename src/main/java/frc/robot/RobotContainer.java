@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -26,6 +27,15 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOSparkMAX;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSparkMAX;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIO;
+import frc.robot.subsystems.turret.TurretIOSparkMAX;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -46,6 +56,9 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
+  private final Intake intake;
+  private final Shooter shooter;
+  private final Turret turret;
 
   private boolean isFieldRelative = false;
 
@@ -73,6 +86,15 @@ public class RobotContainer {
           drive::addVisionMeasurement,
           new VisionIOPhotonVision(camera0Name, robotToCamera0)
         );
+        intake = new Intake(
+          new IntakeIOSparkMAX()
+        );
+        shooter = new Shooter(
+          new ShooterIOSparkMAX()
+        );
+        turret = new Turret(
+          new TurretIOSparkMAX()
+        );
         // TODO: add cameras to vision
         break;
 
@@ -88,6 +110,15 @@ public class RobotContainer {
         vision = new Vision(
           drive::addVisionMeasurement,
           new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
+        intake = new Intake(
+          new IntakeIO() {}
+        );
+        shooter = new Shooter(
+          new ShooterIO() {}
+        );
+        turret = new Turret(
+          new TurretIO() {}
+        );
         break;
 
       default:
@@ -100,6 +131,15 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        intake = new Intake(
+          new IntakeIO() {}
+        );
+        shooter = new Shooter(
+          new ShooterIO() {}
+        );
+        turret = new Turret(
+          new TurretIO() {}
+        );
         break;
     }
 
@@ -158,6 +198,28 @@ public class RobotContainer {
             () -> angularSpeedLimitChooser.get(),
             () -> {return isFieldRelative;}));
 
+    intake.setDefaultCommand(
+      new RunCommand(
+        () -> {
+          intake.stop();
+        }, intake)
+    );
+
+    shooter.setDefaultCommand(
+      new RunCommand(
+        () -> {
+          shooter.setFeedSpeed(0);
+          shooter.setShooterSpeed(0);
+        }, shooter)
+    );
+
+    turret.setDefaultCommand(
+      new RunCommand(
+        () -> {
+          turret.stop();
+        }, turret)
+    );
+
     // Lock to 0° when A button is held
     controller
         .a()
@@ -203,7 +265,51 @@ public class RobotContainer {
         () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
     )
 );
-      
+    
+controller.pov(0).whileTrue(
+  new RunCommand(
+    () -> {
+      intake.setPositionSpeed(-0.2);
+    }, intake)
+);
+
+controller.pov(180).whileTrue(
+  new RunCommand(
+    () -> {
+      intake.setPositionSpeed(0.2);
+    }, intake)
+);
+
+controller.pov(90).whileTrue(
+  new RunCommand(
+    () -> {
+      turret.setSpeed(-0.05);
+    }, turret)
+);
+
+controller.pov(270).whileTrue(
+  new RunCommand(
+    () -> {
+      turret.setSpeed(0.05);
+    }, turret)
+);
+
+controller.leftBumper().whileTrue(
+  new RunCommand(
+    () -> {
+      intake.setIntakeSpeed(1);
+    }, intake)
+);
+
+controller.rightBumper().whileTrue(
+  new RunCommand(
+    () -> {
+      shooter.setFeedSpeed(0.7);
+      shooter.setShooterSpeed(0.7);
+    }, shooter)
+);
+
+
 /* 
     PIDController aimController = new PIDController(0.2, 0, 0);
 aimController.enableContinuousInput(-Math.PI, Math.PI);

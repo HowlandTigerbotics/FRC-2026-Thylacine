@@ -48,8 +48,9 @@ public class IntakeConstants {
 
   public static final class Ports {
     // Device CAN ID
-    public static final int INTAKE_MOTOR_PORT = 17;
-    public static final int POSITION_MOTOR_PORT = 18;
+    public static final int INTAKE_FEED_MOTOR_PORT = 15;
+    public static final int INTAKE_MOTOR_PORT = 16;
+    public static final int POSITION_MOTOR_PORT = 17;
   }
 
   public static final class Tunings {

@@ -23,6 +23,12 @@ public interface IntakeIO {
         public double positionVelocityRadPerSec = 0.0;
         public double positionAppliedVolts = 0.0;
         public double positionCurrentAmps = 0.0;
+
+        public boolean feedConnected = false;
+        public double feedPositionRad = 0.0;
+        public double feedVelocityRadPerSec = 0.0;
+        public double feedAppliedVolts = 0.0;
+        public double feedCurrentAmps = 0.0;
     }
 
     /** Updates the set of loggable inputs. */
@@ -51,5 +57,9 @@ public interface IntakeIO {
 
     /** Run the position motor at the desired speed */
     public default void setPositionSpeed(double speed) {
+    }
+
+    /** */
+    public default void setFeedSpeed(double speed) {
     }
 }

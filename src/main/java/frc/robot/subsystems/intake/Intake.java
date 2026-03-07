@@ -50,5 +50,10 @@ public class Intake extends SubsystemBase {
   public void stop() {
     intakeIO.setIntakeOpenLoop(0);
     intakeIO.setPositionOpenLoop(0);
+    intakeIO.setFeedSpeed(0);
+  }
+
+  public void setFeedSpeed(double speed) {
+    intakeIO.setFeedSpeed(speed);
   }
 }

@@ -33,8 +33,10 @@ public class IntakeIOSparkMAX implements IntakeIO{
   // Hardware objects
   private final SparkBase intakeSpark;
   private final SparkBase positionSpark;
+  private final SparkBase feedSpark;
   private final RelativeEncoder intakeEncoder;
   private final RelativeEncoder positionEncoder;
+  private final RelativeEncoder feedEncoder;
 
   // Closed loop controllers
   private final SparkClosedLoopController intakeController;
@@ -47,9 +49,11 @@ public class IntakeIOSparkMAX implements IntakeIO{
   public IntakeIOSparkMAX() {
     intakeSpark = new SparkMax(Ports.INTAKE_MOTOR_PORT, MotorType.kBrushless);
     positionSpark = new SparkMax(Ports.POSITION_MOTOR_PORT, MotorType.kBrushless);
+    feedSpark = new SparkMax(Ports.INTAKE_FEED_MOTOR_PORT, MotorType.kBrushless);
 
     intakeEncoder = intakeSpark.getEncoder();
     positionEncoder = positionSpark.getEncoder();
+    feedEncoder = feedSpark.getEncoder();
     intakeController = intakeSpark.getClosedLoopController();
     positionController = positionSpark.getClosedLoopController();
 
@@ -121,6 +125,36 @@ public class IntakeIOSparkMAX implements IntakeIO{
     // Reset Encoders
     tryUntilOk(positionSpark, 5, () -> positionEncoder.setPosition(0.0));
 
+    // TODO: Update the constants later
+    var feedConfig = new SparkMaxConfig();
+    feedConfig
+        .idleMode(IdleMode.kBrake)
+        .inverted(false)
+        .smartCurrentLimit(Config.intakeMotorCurrentLimit)
+        .voltageCompensation(12.0);
+    feedConfig.encoder
+        .positionConversionFactor(Physical.intakeEncoderPositionFactor)
+        .velocityConversionFactor(Physical.intakeEncoderVelocityFactor)
+        .uvwMeasurementPeriod(10)
+        .uvwAverageDepth(2);
+    feedConfig.closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .pid(Tunings.intakeKp, 0.0, Tunings.intakeKd);
+    feedConfig.signals
+        .primaryEncoderPositionAlwaysOn(true)
+        .primaryEncoderPositionPeriodMs((int) (1000.0 / Config.odometryFrequency))
+        .primaryEncoderVelocityAlwaysOn(true)
+        .primaryEncoderVelocityPeriodMs(20)
+        .appliedOutputPeriodMs(20)
+        .busVoltagePeriodMs(20)
+        .outputCurrentPeriodMs(20);
+    tryUntilOk(
+        feedSpark,
+        5,
+        () -> feedSpark.configure(
+            feedConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(feedSpark, 5, () -> feedEncoder.setPosition(0.0));
+
   }
 
   @Override
@@ -187,5 +221,10 @@ public class IntakeIOSparkMAX implements IntakeIO{
   @Override
   public void setPositionSpeed(double speed) {
     positionSpark.set(speed);
+  }
+
+  @Override
+  public void setFeedSpeed(double speed) {
+    feedSpark.set(speed);
   }
 }
