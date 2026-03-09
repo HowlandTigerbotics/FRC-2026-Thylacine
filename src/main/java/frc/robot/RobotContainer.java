@@ -27,9 +27,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOSparkMAX;
+import frc.robot.subsystems.intakeRoller.IntakeRoller;
+import frc.robot.subsystems.intakeRoller.IntakeRollerIO;
+import frc.robot.subsystems.intakeRoller.IntakeRollerIOSparkMAX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSparkMAX;
@@ -56,7 +56,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
-  private final Intake intake;
+  private final IntakeRoller intake;
   private final Shooter shooter;
   private final Turret turret;
 
@@ -86,8 +86,8 @@ public class RobotContainer {
           drive::addVisionMeasurement,
           new VisionIOPhotonVision(camera0Name, robotToCamera0)
         );
-        intake = new Intake(
-          new IntakeIOSparkMAX()
+        intake = new IntakeRoller(
+          new IntakeRollerIOSparkMAX()
         );
         shooter = new Shooter(
           new ShooterIOSparkMAX()
@@ -110,8 +110,8 @@ public class RobotContainer {
         vision = new Vision(
           drive::addVisionMeasurement,
           new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
-        intake = new Intake(
-          new IntakeIO() {}
+        intake = new IntakeRoller(
+          new IntakeRollerIO() {}
         );
         shooter = new Shooter(
           new ShooterIO() {}
@@ -131,8 +131,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        intake = new Intake(
-          new IntakeIO() {}
+        intake = new IntakeRoller(
+          new IntakeRollerIO() {}
         );
         shooter = new Shooter(
           new ShooterIO() {}

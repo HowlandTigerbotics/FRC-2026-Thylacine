@@ -2,9 +2,9 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeRoller;
 
-import static frc.robot.subsystems.intake.IntakeConstants.*;
+import static frc.robot.subsystems.intakeRoller.IntakeRollerConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import java.util.Queue;
@@ -29,7 +29,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 /** Add your docs here. */
-public class IntakeIOSparkMAX implements IntakeIO{
+public class IntakeRollerIOSparkMAX implements IntakeRollerIO{
   // Hardware objects
   private final SparkBase intakeSpark;
   private final SparkBase positionSpark;
@@ -46,7 +46,7 @@ public class IntakeIOSparkMAX implements IntakeIO{
   private final Debouncer intakeConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
   private final Debouncer positionConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
-  public IntakeIOSparkMAX() {
+  public IntakeRollerIOSparkMAX() {
     intakeSpark = new SparkMax(Ports.INTAKE_MOTOR_PORT, MotorType.kBrushless);
     positionSpark = new SparkMax(Ports.POSITION_MOTOR_PORT, MotorType.kBrushless);
     feedSpark = new SparkMax(Ports.INTAKE_FEED_MOTOR_PORT, MotorType.kBrushless);

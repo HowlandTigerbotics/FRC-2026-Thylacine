@@ -5,11 +5,11 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeRoller;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 
-public class IntakeConstants {
+public class IntakeRollerConstants {
   public static final class Physical {
     public static final DCMotor intakeGearbox = DCMotor.getNEO(1);
     public static final double intakeMotorReduction = 4.0 / 1.0 * 32.0 / 24.0 * 24.0 / 32.0;
