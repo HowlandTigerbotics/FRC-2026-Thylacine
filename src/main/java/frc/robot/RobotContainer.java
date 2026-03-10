@@ -87,7 +87,7 @@ public class RobotContainer {
           new VisionIOPhotonVision(camera0Name, robotToCamera0)
         );
         intake = new IntakeRoller(
-          new IntakeRollerIOSparkMAX()
+          new IntakeFeedIOSparkMAX()
         );
         shooter = new Shooter(
           new ShooterIOSparkMAX()

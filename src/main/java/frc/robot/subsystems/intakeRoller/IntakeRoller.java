@@ -13,11 +13,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.subsystems.intake.IntakeIOInputsAutoLogged;
 
 public class IntakeRoller extends SubsystemBase {
   private final IntakeRollerIO intakeIO;
-  private final IntakeIOInputsAutoLogged intakeInputs = new IntakeIOInputsAutoLogged();
+  private final IntakeRollerIOInputsAutoLogged intakeInputs = new IntakeRollerIOInputsAutoLogged();
   private final Alert intakeDisconnectedAlert = new Alert("Disconnected Intake.", AlertType.kError);
 
   public IntakeRoller(

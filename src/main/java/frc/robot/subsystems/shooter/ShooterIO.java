@@ -15,29 +15,21 @@ public interface ShooterIO {
         public double shooterVelocityRadPerSec = 0.0;
         public double shooterAppliedVolts = 0.0;
         public double shooterCurrentAmps = 0.0;
-
-        public boolean feedConnected = false;
-        public double feedPositionRad = 0.0;
-        public double feedVelocityRadPerSec = 0.0;
-        public double feedAppliedVolts = 0.0;
-        public double feedCurrentAmps = 0.0;
     }
 
     /** Updates the set of loggable inputs. */
     public default void updateInputs(ShooterIOInputs inputs) {
     }
 
-    /** Run the shooter motor at the specified open loop value. */
-    public default void setShooterOpenLoop(double output) {
+    /** */
+    public default void setShooterOpenLoop(double voltage) {
     }
 
-     /** Run the shooter motor at the specified velocity. */
-    public default void setShooterVelocity(double velocityRadPerSec) {
+    /** */
+    public default void setShooterVelocity(double velocity) {
     }
 
+    /**  */
     public default void setShooterSpeed(double speed) {
-    }
-
-    public default void setFeedSpeed(double speed) {
     }
 }

@@ -158,7 +158,7 @@ public class IntakeRollerIOSparkMAX implements IntakeRollerIO{
   }
 
   @Override
-  public void updateInputs(IntakeIOInputs inputs) {
+  public void updateInputs(IntakeRollerIOInputs inputs) {
     // Update intake inputs
     sparkStickyFault = false;
     ifOk(intakeSpark, intakeEncoder::getPosition, (value) -> inputs.intakePositionRad = value);
