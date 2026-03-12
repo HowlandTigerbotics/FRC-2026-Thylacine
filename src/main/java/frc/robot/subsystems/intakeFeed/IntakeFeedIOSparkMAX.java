@@ -7,26 +7,19 @@ package frc.robot.subsystems.intakeFeed;
 import static frc.robot.subsystems.intakeFeed.IntakeFeedConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
-import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Rotation2d;
 
 /** Add your docs here. */
 public class IntakeFeedIOSparkMAX implements IntakeFeedIO{
@@ -93,7 +86,7 @@ public class IntakeFeedIOSparkMAX implements IntakeFeedIO{
   }
 
   @Override
-  public void setFeedSpeed(double speed) {
-    feedSpark.set(speed);
+  public void setFeedPercent(double percent) {
+    feedSpark.set(percent);
   }
 }

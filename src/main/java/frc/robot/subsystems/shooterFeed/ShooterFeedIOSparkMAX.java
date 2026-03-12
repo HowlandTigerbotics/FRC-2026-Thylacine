@@ -14,7 +14,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -28,16 +27,13 @@ public class ShooterFeedIOSparkMAX implements ShooterFeedIO {
     private final SparkBase feedSpark;
     private final RelativeEncoder feedEncoder;
 
-    // Closed loop controllers
-    private final SparkClosedLoopController feedController;
-
     // Connection debouncers
     private final Debouncer feedConnectedDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
     public ShooterFeedIOSparkMAX() {
         feedSpark = new SparkMax(Ports.FEED_PORT_ID, MotorType.kBrushless);
         feedEncoder = feedSpark.getEncoder();
-        feedController = feedSpark.getClosedLoopController();
+
         configureMotors();
     }
 
@@ -89,7 +85,7 @@ public class ShooterFeedIOSparkMAX implements ShooterFeedIO {
     }
 
   @Override
-  public void setFeedSpeed(double speed) {
-    feedSpark.set(speed);
+  public void setFeedPercent(double percent) {
+    feedSpark.set(percent);
   }
 }

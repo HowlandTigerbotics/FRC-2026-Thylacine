@@ -12,6 +12,7 @@ import frc.robot.util.AutoLogIOInputs.PositionMotorInputs;
 /** Add your docs here. */
 public interface TurretIO {
     @AutoLog
+    // TODO: Verify
     public static class TurretIOInputs extends PositionMotorInputs {
     }
 
@@ -28,6 +29,6 @@ public interface TurretIO {
     }
 
     /** Run the turret motor at the specified speed. */
-    public default void setTurretSpeed(double speed) {
+    public default void setTurretPercent(double percent) {
     }
 }

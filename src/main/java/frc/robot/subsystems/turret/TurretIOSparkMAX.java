@@ -108,7 +108,7 @@ public class TurretIOSparkMAX implements TurretIO {
     }
 
     @Override
-    public void setTurretSpeed(double speed) {
-        turretSpark.set(speed);
+    public void setTurretPercent(double percent) {
+        turretSpark.set(percent);
     }
 }

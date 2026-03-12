@@ -7,18 +7,15 @@ package frc.robot.subsystems.intakePosition;
 import static frc.robot.subsystems.intakePosition.IntakeRollerPosition.*;
 import static frc.robot.util.SparkUtil.*;
 
-import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -117,7 +114,7 @@ public class IntakePositionIOSparkMAX implements IntakePositionIO{
   }
 
   @Override
-  public void setPositionSpeed(double speed) {
-    positionSpark.set(speed);
+  public void setPositionPercent(double percent) {
+    positionSpark.set(percent);
   }
 }

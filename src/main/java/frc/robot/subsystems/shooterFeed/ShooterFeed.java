@@ -29,11 +29,17 @@ public class ShooterFeed extends SubsystemBase {
 
         // Stop moving when disabled
         if (DriverStation.isDisabled()) {
-            shooterFeedIO.setFeedSpeed(0);
+            shooterFeedIO.setFeedPercent(0);
         }
+
+        shooterFeedDisconnectedAlert.set(!shooterFeedInputs.feedConnected);
     }
 
-    public void setFeedSpeed(double speed) {
-        shooterFeedIO.setFeedSpeed(speed);
+    public void setFeedPercent(double percent) {
+        shooterFeedIO.setFeedPercent(percent);
+    }
+
+    public void stop() {
+        shooterFeedIO.setFeedPercent(0);
     }
 }

@@ -21,6 +21,6 @@ public interface ShooterFeedIO {
     public default void updateInputs(ShooterFeedIOInputs inputs) {
     }
 
-    public default void setFeedSpeed(double speed) {
+    public default void setFeedPercent(double percent) {
     }
 }

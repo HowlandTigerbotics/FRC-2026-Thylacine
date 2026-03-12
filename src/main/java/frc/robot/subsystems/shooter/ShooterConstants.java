@@ -31,7 +31,6 @@ public class ShooterConstants {
     }
 
     public static final class Ports {
-        public static final int FEED_PORT_ID = 19;
         public static final int SHOOTER_PORT_ID = 20;
     }
 

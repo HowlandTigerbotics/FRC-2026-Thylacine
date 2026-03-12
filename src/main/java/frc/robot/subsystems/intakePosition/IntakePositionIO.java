@@ -23,31 +23,15 @@ public interface IntakePositionIO {
     public default void updateInputs(IntakePositionIOInputs inputs) {
     }
 
-    /** Run the intake motor at the specified open loop value. */
-    public default void setIntakeOpenLoop(double output) {
-    }
-
     /** Run the position motor at the specified open loop value. */
     public default void setPositionOpenLoop(double output) {
-    }
-
-    /** Run the intake motor at the specified velocity. */
-    public default void setIntakeVelocity(double velocityRadPerSec) {
     }
 
     /** Run the position motor to the specified rotation. */
     public default void setPositionPosition(Rotation2d rotation) {
     }
 
-    /** Run the intake motor at the desired speed. */
-    public default void setIntakeSpeed(double speed) {
-    }
-
     /** Run the position motor at the desired speed */
-    public default void setPositionSpeed(double speed) {
-    }
-
-    /** */
-    public default void setFeedSpeed(double speed) {
+    public default void setPositionPercent(double percent) {
     }
 }

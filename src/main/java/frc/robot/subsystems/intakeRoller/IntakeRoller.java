@@ -6,13 +6,10 @@ package frc.robot.subsystems.intakeRoller;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
 
 public class IntakeRoller extends SubsystemBase {
   private final IntakeRollerIO intakeIO;
@@ -31,29 +28,18 @@ public class IntakeRoller extends SubsystemBase {
     
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
-      intakeIO.setPositionOpenLoop(0);
       intakeIO.setIntakeOpenLoop(0);
     }
 
     // Update intake alert
-    intakeDisconnectedAlert.set(!intakeInputs.intakeConnected && !intakeInputs.positionConnected && Constants.currentMode != Mode.SIM);
+    intakeDisconnectedAlert.set(!intakeInputs.intakeConnected);
   }
 
-  public void setIntakeSpeed(double speed) {
-    intakeIO.setIntakeSpeed(speed);
-  }
-
-  public void setPositionSpeed(double speed) {
-    intakeIO.setPositionSpeed(speed);
+  public void setIntakePercent(double percent) {
+    intakeIO.setIntakePercent(percent);
   }
 
   public void stop() {
     intakeIO.setIntakeOpenLoop(0);
-    intakeIO.setPositionOpenLoop(0);
-    intakeIO.setFeedSpeed(0);
-  }
-
-  public void setFeedSpeed(double speed) {
-    intakeIO.setFeedSpeed(speed);
   }
 }

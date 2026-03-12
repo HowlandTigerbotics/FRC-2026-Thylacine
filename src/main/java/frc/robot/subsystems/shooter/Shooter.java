@@ -6,12 +6,10 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.shooter.ShooterIO;
 
 /** Add your docs here. */
 public class Shooter extends SubsystemBase {
@@ -34,9 +32,15 @@ public class Shooter extends SubsystemBase {
     if (DriverStation.isDisabled()) {
       shooterIO.setShooterOpenLoop(0);
     }
+
+    shooterDisconnectedAlert.set(!shooterInputs.shooterConnected);
   }
 
-  public void runSpeed(double velocityRadPerSec) {
-    shooterIO.setShooterVelocity(velocityRadPerSec);
+  public void setPercent(double percent) {
+    shooterIO.setShooterPercent(percent);
+  }
+
+  public void stop() {
+    shooterIO.setShooterPercent(0);
   }
 }

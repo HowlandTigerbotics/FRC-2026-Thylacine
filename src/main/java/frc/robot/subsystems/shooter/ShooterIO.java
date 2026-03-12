@@ -26,10 +26,10 @@ public interface ShooterIO {
     }
 
     /** */
-    public default void setShooterVelocity(double velocity) {
+    public default void setShooterVelocity(double velocityRadPerSec) {
     }
 
-    /**  */
-    public default void setShooterSpeed(double speed) {
+    /** */
+    public default void setShooterPercent(double velocity) {
     }
 }

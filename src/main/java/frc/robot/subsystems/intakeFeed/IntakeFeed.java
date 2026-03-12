@@ -6,7 +6,6 @@ package frc.robot.subsystems.intakeFeed;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -31,7 +30,7 @@ public class IntakeFeed extends SubsystemBase {
     
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
-      intakeFeedIO.setFeedSpeed(0);
+      intakeFeedIO.setFeedPercent(0);
     }
 
     // Update intake alert
@@ -39,10 +38,10 @@ public class IntakeFeed extends SubsystemBase {
   }
 
   public void stop() {
-    intakeFeedIO.setFeedSpeed(0);
+    intakeFeedIO.setFeedPercent(0);
   }
 
-  public void setFeedSpeed(double speed) {
-    intakeFeedIO.setFeedSpeed(speed);
+  public void setFeedPercent(double percent) {
+    intakeFeedIO.setFeedPercent(percent);
   }
 }

@@ -25,8 +25,8 @@ public class DriveConstants {
      * wheelBase refers to the distance between the center of a front wheel and a
      * back wheel.
      */
-    public static final double trackWidthMeters = Units.inchesToMeters(26.5);
-    public static final double wheelBaseMeters = Units.inchesToMeters(26.5);
+    public static final double trackWidthMeters = Units.inchesToMeters(19.75);
+    public static final double wheelBaseMeters = Units.inchesToMeters(20.75);
     public static final double driveBaseRadiusMeters = Math.hypot(trackWidthMeters / 2.0, wheelBaseMeters / 2.0);
 
     public static final Translation2d[] moduleTranslationsMeters = new Translation2d[] {

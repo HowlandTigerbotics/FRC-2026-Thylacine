@@ -6,8 +6,6 @@ package frc.robot.subsystems.intakeFeed;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-
 /** Add your docs here. */
 public interface IntakeFeedIO {
     @AutoLog
@@ -24,6 +22,6 @@ public interface IntakeFeedIO {
     }
 
     /** */
-    public default void setFeedSpeed(double speed) {
+    public default void setFeedPercent(double percent) {
     }
 }

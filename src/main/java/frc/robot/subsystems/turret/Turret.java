@@ -19,10 +19,10 @@ public class Turret extends SubsystemBase {
   private final TurretIO turretIO;
   private final TurretIOInputsAutoLogged turretInputs = new TurretIOInputsAutoLogged();
 
-  private final Alert turretDisconnectedAlert = 
-  new Alert("Disconnected Turret", AlertType.kError);
+  
 
-  private boolean isOpenLoop = false;
+  private final Alert turretDisconnectedAlert = 
+    new Alert("Disconnected Turret", AlertType.kError);
 
   public Turret(TurretIO turretIO) {
     this.turretIO = turretIO;
@@ -37,27 +37,32 @@ public class Turret extends SubsystemBase {
     if (DriverStation.isDisabled()) {
       turretIO.setTurretOpenLoop(0);
     }
+
+    // Update Turret Alert
+    turretDisconnectedAlert.set(!turretInputs.positionMotorConnected);
   }
 
-  public void openLoop(double voltage) {
-    isOpenLoop = true;
-    turretIO.setTurretOpenLoop(voltage);
+  public void setTurretOpenLoop(double output) {
+    turretIO.setTurretOpenLoop(output);
   }
 
   public void goToPosition(Rotation2d rotation) {
     turretIO.setTurretPosition(rotation);
   }
 
-  public void setSpeed(double speed) {
-    isOpenLoop = false;
-    turretIO.setTurretSpeed(speed);
+  public void setTurretPercent(double percent) {
+    turretIO.setTurretPercent(percent);
   }
 
   public void stop() {
-    turretIO.setTurretOpenLoop(0);
+    turretIO.setTurretPercent(0);
   }
 
   public Rotation2d getRotation() {
     return turretInputs.positionMotorPosition;
+  }
+
+  public double getVelocityRadPerSec() {
+    return turretInputs.positionMotorVelocityRadPerSec;
   }
 }

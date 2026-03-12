@@ -29,10 +29,7 @@ import edu.wpi.first.math.filter.Debouncer;
 public class ShooterIOSparkMAX implements ShooterIO{
     // Hardware objects
     private final SparkBase shooterSpark;
-    private final SparkBase feedSpark;
     private final RelativeEncoder shooterEncoder;
-    private final RelativeEncoder feedEncoder;
-
     // Closed loop controllers
     private final SparkClosedLoopController shooterController;
 
@@ -44,8 +41,6 @@ public class ShooterIOSparkMAX implements ShooterIO{
         shooterEncoder = shooterSpark.getEncoder();
         shooterController = shooterSpark.getClosedLoopController();
 
-        feedSpark = new SparkMax(Ports.FEED_PORT_ID, MotorType.kBrushless);
-        feedEncoder = feedSpark.getEncoder();
         configureMotors();
     }
 
@@ -107,7 +102,7 @@ public class ShooterIOSparkMAX implements ShooterIO{
   }
 
   @Override
-  public void setShooterSpeed(double speed) {
-    shooterSpark.set(speed);
+  public void setShooterPercent(double percent) {
+    shooterSpark.set(percent);
   }
 }

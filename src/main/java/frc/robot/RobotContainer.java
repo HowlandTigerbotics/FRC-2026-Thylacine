@@ -21,18 +21,28 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.TurretCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMAX;
+import frc.robot.subsystems.intakeFeed.IntakeFeed;
+import frc.robot.subsystems.intakeFeed.IntakeFeedIO;
+import frc.robot.subsystems.intakeFeed.IntakeFeedIOSparkMAX;
+import frc.robot.subsystems.intakePosition.IntakePosition;
+import frc.robot.subsystems.intakePosition.IntakePositionIO;
+import frc.robot.subsystems.intakePosition.IntakePositionIOSparkMAX;
 import frc.robot.subsystems.intakeRoller.IntakeRoller;
 import frc.robot.subsystems.intakeRoller.IntakeRollerIO;
 import frc.robot.subsystems.intakeRoller.IntakeRollerIOSparkMAX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSparkMAX;
+import frc.robot.subsystems.shooterFeed.ShooterFeed;
+import frc.robot.subsystems.shooterFeed.ShooterFeedIO;
+import frc.robot.subsystems.shooterFeed.ShooterFeedIOSparkMAX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSparkMAX;
@@ -47,19 +57,29 @@ import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Vision vision;
-  private final IntakeRoller intake;
+
+  private final IntakeFeed intakeFeed;
+  private final IntakePosition intakePosition;
+  private final IntakeRoller intakeRoller;
+
   private final Shooter shooter;
+  private final ShooterFeed shooterFeed;
   private final Turret turret;
 
+  private final Vision vision;
+
+  // Field Relative for drive
   private boolean isFieldRelative = false;
 
   // Controller
@@ -70,76 +90,105 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Double> linearSpeedLimitChooser;
   private final LoggedDashboardChooser<Double> angularSpeedLimitChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOSparkMAX(0),
-                new ModuleIOSparkMAX(1),
-                new ModuleIOSparkMAX(2),
-                new ModuleIOSparkMAX(3));
-        vision = new Vision(
-          drive::addVisionMeasurement,
-          new VisionIOPhotonVision(camera0Name, robotToCamera0)
-        );
-        intake = new IntakeRoller(
-          new IntakeFeedIOSparkMAX()
-        );
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOSparkMAX(0),
+            new ModuleIOSparkMAX(1),
+            new ModuleIOSparkMAX(2),
+            new ModuleIOSparkMAX(3));
+        intakeFeed = new IntakeFeed(
+            new IntakeFeedIOSparkMAX());
+        intakePosition = new IntakePosition(
+            new IntakePositionIOSparkMAX());
+        intakeRoller = new IntakeRoller(
+            new IntakeRollerIOSparkMAX());
         shooter = new Shooter(
-          new ShooterIOSparkMAX()
-        );
+            new ShooterIOSparkMAX());
+        shooterFeed = new ShooterFeed(
+            new ShooterFeedIOSparkMAX());
         turret = new Turret(
-          new TurretIOSparkMAX()
-        );
+            new TurretIOSparkMAX());
         // TODO: add cameras to vision
+        vision = new Vision(
+            drive::addVisionMeasurement,
+            new VisionIOPhotonVision(camera0Name, robotToCamera0));
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim());
-        vision = new Vision(
-          drive::addVisionMeasurement,
-          new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
-        intake = new IntakeRoller(
-          new IntakeRollerIO() {}
-        );
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(),
+            new ModuleIOSim(),
+            new ModuleIOSim(),
+            new ModuleIOSim());
+
+        intakeFeed = new IntakeFeed(
+            new IntakeFeedIO() {
+            });
+        intakePosition = new IntakePosition(
+            new IntakePositionIO() {
+            });
+        intakeRoller = new IntakeRoller(
+            new IntakeRollerIO() {
+            });
         shooter = new Shooter(
-          new ShooterIO() {}
-        );
+            new ShooterIO() {
+            });
+        shooterFeed = new ShooterFeed(
+            new ShooterFeedIO() {
+            });
         turret = new Turret(
-          new TurretIO() {}
-        );
+            new TurretIO() {
+            });
+        vision = new Vision(
+            drive::addVisionMeasurement,
+            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        intake = new IntakeRoller(
-          new IntakeRollerIO() {}
-        );
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
+
+        intakeFeed = new IntakeFeed(
+            new IntakeFeedIO() {
+            });
+        intakePosition = new IntakePosition(
+            new IntakePositionIO() {
+            });
+        intakeRoller = new IntakeRoller(
+            new IntakeRollerIO() {
+            });
         shooter = new Shooter(
-          new ShooterIO() {}
-        );
+            new ShooterIO() {
+            });
+        shooterFeed = new ShooterFeed(
+            new ShooterFeedIO() {
+            });
         turret = new Turret(
-          new TurretIO() {}
-        );
+            new TurretIO() {
+            });
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
+        }, new VisionIO() {
+        });
         break;
     }
 
@@ -181,9 +230,11 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -196,29 +247,45 @@ public class RobotContainer {
             () -> controller.getRightX(),
             () -> linearSpeedLimitChooser.get(),
             () -> angularSpeedLimitChooser.get(),
-            () -> {return isFieldRelative;}));
+            () -> {
+              return isFieldRelative;
+            }));
 
-    intake.setDefaultCommand(
-      new RunCommand(
-        () -> {
-          intake.stop();
-        }, intake)
-    );
+    intakeFeed.setDefaultCommand(
+        new RunCommand(
+            () -> {
+              intakeFeed.stop();
+            }, intakeFeed));
+
+    intakePosition.setDefaultCommand(
+        new RunCommand(
+            () -> {
+              intakePosition.stop();
+            }, intakePosition));
+
+    intakeRoller.setDefaultCommand(
+        new RunCommand(
+            () -> {
+              intakeRoller.stop();
+            }, intakeRoller));
 
     shooter.setDefaultCommand(
-      new RunCommand(
-        () -> {
-          shooter.setFeedSpeed(0);
-          shooter.setShooterSpeed(0);
-        }, shooter)
-    );
+        new RunCommand(
+            () -> {
+              shooter.stop();
+            }, shooter));
+
+    shooterFeed.setDefaultCommand(
+        new RunCommand(
+            () -> {
+              shooterFeed.stop();
+            }, shooterFeed));
 
     turret.setDefaultCommand(
-      new RunCommand(
-        () -> {
-          turret.stop();
-        }, turret)
-    );
+        new RunCommand(
+            () -> {
+              turret.stop();
+            }, turret));
 
     // Lock to 0° when A button is held
     controller
@@ -240,96 +307,86 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
                 .ignoringDisable(true));
 
     // Switch from Field Relative to Robot Relative when Home button is pressed
     controller
-      .leftStick()
-      .onTrue(
-       Commands.runOnce(
-        () -> {isFieldRelative = !isFieldRelative;}) 
-      );
+        .leftStick()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  isFieldRelative = !isFieldRelative;
+                }));
 
+    controller.y().whileTrue(
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> 0.0, // no translation X
+            () -> 0.0, // no translation Y
+            () -> 1.0, // linear speed scale
+            () -> 0.7, // angular speed scale
+            () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
+        ));
 
-      controller.y().whileTrue(
-    DriveCommands.joystickDriveAtAngle(
-        drive,
-        () -> 0.0, // no translation X
-        () -> 0.0, // no translation Y
-        () -> 1.0, // linear speed scale
-        () -> 0.7, // angular speed scale
-        () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
-    )
-);
-    
-controller.pov(0).whileTrue(
-  new RunCommand(
-    () -> {
-      intake.setPositionSpeed(-0.2);
-    }, intake)
-);
+    controller.pov(0).whileTrue(
+        new RunCommand(
+            () -> {
+              intakePosition.setPositionPercent(0.2);
+            }, intakePosition));
 
-controller.pov(180).whileTrue(
-  new RunCommand(
-    () -> {
-      intake.setPositionSpeed(0.2);
-    }, intake)
-);
+    controller.pov(180).whileTrue(
+        new RunCommand(
+            () -> {
+              intakePosition.setPositionPercent(-0.2);
+            }, intakePosition));
 
-controller.pov(90).whileTrue(
-  new RunCommand(
-    () -> {
-      turret.setSpeed(-0.05);
-    }, turret)
-);
+    controller.pov(90).whileTrue(
+        new RunCommand(
+            () -> {
+              turret.setTurretPercent(-0.05);
+            }, turret));
 
-controller.pov(270).whileTrue(
-  new RunCommand(
-    () -> {
-      turret.setSpeed(0.05);
-    }, turret)
-);
+    controller.pov(270).whileTrue(
+        new RunCommand(
+            () -> {
+              turret.setTurretPercent(0.05);
+            }, turret));
 
-controller.leftBumper().whileTrue(
-  new RunCommand(
-    () -> {
-      intake.setIntakeSpeed(1);
-    }, intake)
-);
+    controller.leftBumper().whileTrue(
+        new RunCommand(
+            () -> {
+              intakeRoller.setIntakePercent(0.7);
+            }, intakeRoller));
 
-controller.rightBumper().whileTrue(
-  new RunCommand(
-    () -> {
-      shooter.setFeedSpeed(0.7);
-      shooter.setShooterSpeed(0.7);
-    }, shooter)
-);
+    controller.rightBumper().whileTrue(
+        new RunCommand(
+            () -> {
+              shooter.setPercent(0.63);
+            }, shooter));
 
-
-/* 
-    PIDController aimController = new PIDController(0.2, 0, 0);
-aimController.enableContinuousInput(-Math.PI, Math.PI);
-
-controller.y().whileTrue(
-    Commands.run(
+    controller.leftTrigger(0.3).whileTrue(
+      new RunCommand(
         () -> {
-            double omega = aimController.calculate(
-                vision.getTargetX(0).getRadians(),
-                0.0
-            );
+          intakeFeed.setFeedPercent(0.7);
+        }, intakeFeed)
+    );
 
-            drive.runVelocity(
-           ggggggggggggg     new ChassisSpeeds(0.0, 0.0, omega)
-            );
-        },
-        drive
-    ).beforeStarting(aimController::reset)
-    
-);*/
+    controller.rightTrigger(0.3).whileTrue(
+      new RunCommand(
+        () -> {
+          shooterFeed.setFeedPercent(0.7);
+        }, shooterFeed)
+    );
+
+    controller.start().whileTrue(
+        TurretCommands.turretAtAngle(
+          turret, 
+          () -> 0.7,
+          () -> turret.getRotation().minus(vision.getTargetX(0)))
+    );
   }
 
   /**

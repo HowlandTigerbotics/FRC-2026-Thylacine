@@ -9,14 +9,9 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.turret.Turret;
 
 /** Add your docs here. */
@@ -26,6 +21,8 @@ public class TurretCommands {
     private static final double ANGLE_KD = 0.4;
     private static final double ANGLE_MAX_VELOCITY = 8.0;
     private static final double ANGLE_MAX_ACCELERATION = 20.0;
+
+    private TurretCommands() {}
 
     public static Command turretAtAngle(
             Turret turret,
@@ -48,7 +45,7 @@ public class TurretCommands {
                             turret.getRotation().getRadians(), rotationSupplier.get().getRadians());
 
                     omega *= angularSpeedSupplier.getAsDouble();
-                    turret.openLoop(omega);
+                    turret.setTurretOpenLoop(omega);
                 },
                 turret)
 
