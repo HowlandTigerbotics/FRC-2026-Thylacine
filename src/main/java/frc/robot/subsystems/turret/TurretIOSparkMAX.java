@@ -86,14 +86,14 @@ public class TurretIOSparkMAX implements TurretIO {
         ifOk(
                 turretSpark,
                 turretEncoder::getPosition,
-                (value) -> inputs.turretPosition = new Rotation2d(value).minus(Rotation2d.kZero));
-        ifOk(turretSpark, turretEncoder::getVelocity, (value) -> inputs.turretVelocityRadPerSec = value);
+                (value) -> inputs.positionMotorPosition = new Rotation2d(value).minus(Rotation2d.kZero));
+        ifOk(turretSpark, turretEncoder::getVelocity, (value) -> inputs.positionMotorVelocityRadPerSec = value);
         ifOk(
                 turretSpark,
                 new DoubleSupplier[] { turretSpark::getAppliedOutput, turretSpark::getBusVoltage },
-                (values) -> inputs.turretAppliedVolts = values[0] * values[1]);
-        ifOk(turretSpark, turretSpark::getOutputCurrent, (value) -> inputs.turretCurrentAmps = value);
-        inputs.turretConnected = turretConnectedDebouncer.calculate(!sparkStickyFault);
+                (values) -> inputs.positionMotorAppliedVolts = values[0] * values[1]);
+        ifOk(turretSpark, turretSpark::getOutputCurrent, (value) -> inputs.positionMotorCurrentAmps = value);
+        inputs.positionMotorConnected = turretConnectedDebouncer.calculate(!sparkStickyFault);
     }
 
     @Override

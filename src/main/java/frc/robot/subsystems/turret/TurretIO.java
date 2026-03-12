@@ -7,16 +7,12 @@ package frc.robot.subsystems.turret;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.util.AutoLogIOInputs.PositionMotorInputs;
 
 /** Add your docs here. */
 public interface TurretIO {
     @AutoLog
-    public static class TurretIOInputs {
-        public boolean turretConnected = false;
-        public Rotation2d turretPosition = Rotation2d.kZero;
-        public double turretVelocityRadPerSec = 0.0;
-        public double turretAppliedVolts = 0.0;
-        public double turretCurrentAmps = 0.0;
+    public static class TurretIOInputs extends PositionMotorInputs {
     }
 
     /** Updates the set of loggable inputs. */

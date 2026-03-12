@@ -58,6 +58,6 @@ public class Turret extends SubsystemBase {
   }
 
   public Rotation2d getRotation() {
-    return turretInputs.turretPosition;
+    return turretInputs.positionMotorPosition;
   }
 }

@@ -8,7 +8,11 @@
 package frc.robot.util;
 
 import com.revrobotics.REVLibError;
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
@@ -52,5 +56,45 @@ public class SparkUtil {
         sparkStickyFault = true;
       }
     }
+  }
+
+  public static SparkMaxConfig getPositionMotorConfig(
+    boolean isInverted, 
+    int smartCurrentLimit, 
+    double nominalVoltage,
+    double encoderPositionFactor,
+    double encoderVelocityFactor,
+    double P,
+    double I,
+    double D,
+    double encoderUpdateFrequencyHz
+  ) {
+    var config = new SparkMaxConfig();
+    config
+        .idleMode(IdleMode.kBrake)
+        .inverted(isInverted)
+        .smartCurrentLimit(smartCurrentLimit)
+        .voltageCompensation(nominalVoltage);
+    config.encoder
+        .positionConversionFactor(encoderPositionFactor)
+        .velocityConversionFactor(encoderVelocityFactor)
+        .uvwMeasurementPeriod(10)
+        .uvwAverageDepth(2);
+    config.closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .positionWrappingEnabled(true)
+        .positionWrappingInputRange(-Math.PI, Math.PI)
+        .pid(P, I, D);
+    // We use 20 millisecond update 
+    config.signals
+        .primaryEncoderPositionAlwaysOn(true)
+        .primaryEncoderPositionPeriodMs((int) (1000.0 / encoderUpdateFrequencyHz))
+        .primaryEncoderVelocityAlwaysOn(true)
+        .primaryEncoderVelocityPeriodMs(20)
+        .appliedOutputPeriodMs(20)
+        .busVoltagePeriodMs(20)
+        .outputCurrentPeriodMs(20);
+
+    return config;
   }
 }
