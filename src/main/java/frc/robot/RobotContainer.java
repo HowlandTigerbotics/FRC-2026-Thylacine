@@ -9,10 +9,8 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -89,6 +87,10 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardChooser<Double> linearSpeedLimitChooser;
   private final LoggedDashboardChooser<Double> angularSpeedLimitChooser;
+
+  // Tuning Dashboard Inputs
+  private final LoggedDashboardChooser<Double> tensSpeedChooser;
+  private final LoggedDashboardChooser<Double> onesSpeedChooser;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -224,6 +226,35 @@ public class RobotContainer {
     angularSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
     angularSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
     angularSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
+
+    tensSpeedChooser = new LoggedDashboardChooser<>("Tens Speed Chooser");
+    onesSpeedChooser = new LoggedDashboardChooser<>("Ones Speed Chooser");
+
+    tensSpeedChooser.addDefaultOption("00", 0.0);
+    tensSpeedChooser.addOption("10", 0.1);
+    tensSpeedChooser.addOption("20", 0.2);
+    tensSpeedChooser.addOption("30", 0.3);
+    tensSpeedChooser.addOption("40", 0.4);
+    tensSpeedChooser.addOption("50", 0.5);
+    tensSpeedChooser.addOption("60", 0.6);
+    tensSpeedChooser.addOption("70", 0.7);
+    tensSpeedChooser.addOption("80", 0.8);
+    tensSpeedChooser.addOption("90", 0.9);
+    tensSpeedChooser.addOption("100", 1.0);
+
+    onesSpeedChooser.addDefaultOption("0", 0.00);
+    onesSpeedChooser.addOption("1", 0.01);
+    onesSpeedChooser.addOption("2", 0.02);
+    onesSpeedChooser.addOption("3", 0.03);
+    onesSpeedChooser.addOption("4", 0.04);
+    onesSpeedChooser.addOption("5", 0.05);
+    onesSpeedChooser.addOption("6", 0.06);
+    onesSpeedChooser.addOption("7", 0.07);
+    onesSpeedChooser.addOption("8", 0.08);
+    onesSpeedChooser.addOption("9", 0.09);
+
+
+    
 
     // Configure the button bindings
     configureButtonBindings();
@@ -386,6 +417,13 @@ public class RobotContainer {
           turret, 
           () -> 0.7,
           () -> turret.getRotation().minus(vision.getTargetX(0)))
+    );
+
+    controller.back().whileTrue(
+      new RunCommand(
+        () -> {
+          shooter.setPercent(tensSpeedChooser.get() == 1.0 ? 1.0 : tensSpeedChooser.get() + onesSpeedChooser.get());
+        }, shooter)
     );
   }
 
