@@ -2,20 +2,20 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.turret;
+package frc.robot.subsystems.hopper;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 
 /** Add your docs here. */
-public class TurretConstants {
+public class HopperConstants {
     public static final class Physical {
-        public static final DCMotor kTurretGearbox = DCMotor.getNeo550(1);
-        public static final double kTurretMotorReduction = 3.0 / 1.0 * 200.0 / 10.0;
+        public static final DCMotor kHopperGearbox = DCMotor.getNeo550(1);
+        public static final double kHopperMotorReduction = 1.0; // TODO: Change
 
         // Turret encoder configuration
-        public static final double turretEncoderPositionFactor = 2 * Math.PI / kTurretMotorReduction; // Rotor Rotations ->
+        public static final double turretEncoderPositionFactor = 2 * Math.PI / kHopperMotorReduction; // Rotor Rotations ->
         // Wheel Radians
-        public static final double turretEncoderVelocityFactor = (2 * Math.PI) / 60.0 / kTurretMotorReduction; // Rotor RPM ->
+        public static final double turretEncoderVelocityFactor = (2 * Math.PI) / 60.0 / kHopperMotorReduction; // Rotor RPM ->
         // Wheel Rad/Sec
     }
 
@@ -28,11 +28,6 @@ public class TurretConstants {
     }
 
     public static final class Ports {
-        public static final int TURRET_PORT_ID = 15;
-    }
-
-    public static final class Tunings {
-        public static final double turretP = 0.2;
-        public static final double turretD = 0.0;
+        public static final int HOPPER_PORT_ID = 22;
     }
 }

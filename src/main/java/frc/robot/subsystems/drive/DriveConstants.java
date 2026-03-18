@@ -58,9 +58,9 @@ public class DriveConstants {
     // Wheel Rad/Sec
 
     // PathPlanner configuration
-    public static final double robotMassKg = 74.088;
+    public static final double robotMassKg = Units.lbsToKilograms(110.5);
     public static final double robotMOI = 6.883;
-    public static final double wheelCOF = 1.2;
+    public static final double wheelCOF = 1.0;
   }
 
   public static final class Config {

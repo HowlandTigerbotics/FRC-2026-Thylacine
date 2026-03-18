@@ -49,7 +49,7 @@ public class ShooterIOSparkMAX implements ShooterIO{
         var shooterConfig = new SparkMaxConfig();
         shooterConfig
                 .idleMode(IdleMode.kCoast) // IMPORTANT: Coast because bangbang controller
-                .inverted(Config.shooterInverted)
+                .inverted(false)
                 .smartCurrentLimit(Config.kSmartCurrentLimit)
                 .voltageCompensation(Config.kNominalVoltage);
         shooterConfig.encoder

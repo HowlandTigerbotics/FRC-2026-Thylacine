@@ -43,7 +43,7 @@ public class IntakeFeedIOSparkMAX implements IntakeFeedIO{
     var feedConfig = new SparkMaxConfig();
     feedConfig
         .idleMode(IdleMode.kBrake)
-        .inverted(false)
+        .inverted(true)
         .smartCurrentLimit(30)
         .voltageCompensation(12.0);
     feedConfig.encoder

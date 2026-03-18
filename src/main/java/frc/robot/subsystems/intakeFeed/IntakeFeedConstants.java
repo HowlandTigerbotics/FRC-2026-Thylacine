@@ -41,16 +41,14 @@ public class IntakeFeedConstants {
     public static final double intakeMotorNominalVoltage = 12.0;
 
     // Position motor configuration
-    public static final boolean positionInverted = true;
+    public static final boolean positionInverted = false;
     public static final int positionMotorCurrentLimit = 30;
     public static final double positionMotorNominalVoltage = 12.0;
   }
 
   public static final class Ports {
     // Device CAN ID
-    public static final int INTAKE_FEED_MOTOR_PORT = 15;
-    public static final int INTAKE_MOTOR_PORT = 16;
-    public static final int POSITION_MOTOR_PORT = 17;
+    public static final int INTAKE_FEED_MOTOR_PORT = 16;
   }
 
   public static final class Tunings {

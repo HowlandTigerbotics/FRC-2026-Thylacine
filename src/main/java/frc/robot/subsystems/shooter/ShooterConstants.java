@@ -25,7 +25,7 @@ public class ShooterConstants {
     public static final class Config {
         public static final double kUpdateFrequency = 100.0; // Hz
 
-        public static final boolean shooterInverted = false;
+        public static final boolean shooterInverted = true;
         public static final int kSmartCurrentLimit = 30; // Less because Neo550
         public static final double kNominalVoltage = 12.0;
     }

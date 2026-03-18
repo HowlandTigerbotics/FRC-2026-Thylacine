@@ -7,7 +7,12 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.events.EventTrigger;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -75,7 +80,9 @@ public class RobotContainer {
   private final ShooterFeed shooterFeed;
   private final Turret turret;
 
-  private final Vision vision;
+  private final Vision vision;  
+
+  //private final SparkMax motor;
 
   // Field Relative for drive
   private boolean isFieldRelative = false;
@@ -194,8 +201,40 @@ public class RobotContainer {
         break;
     }
 
+    
+    //motor = new SparkMax(22, com.revrobotics.spark.SparkLowLevel.MotorType.kBrushless);
+
+    // Setup Named Commands
+    // Important Note: This Shoot command is with named comd sequences
+    // Will run when teh trigger is activated.
+    NamedCommands.registerCommand("FeedShooter", 
+      Commands.run(
+        () -> {
+          shooterFeed.setFeedPercent(0.6);
+          intakeFeed.setFeedPercent(0.6);
+        }, shooterFeed, intakeFeed
+      ).withTimeout(2)
+       .alongWith(
+        Commands.print("Feeding")
+      )
+    );
+
+    NamedCommands.registerCommand("SpinShooter",
+        Commands.run(() -> {
+          shooter.setPercent(0.6);
+        }, shooter)
+        .withTimeout(10)
+        .alongWith(
+          Commands.print("Spinning")
+        )
+    );
+
+    new EventTrigger("SampleEvent").onTrue(Commands.print("EventMarkerTriggered"));
+    
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -212,6 +251,10 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    // Add PathPlanner Autos here
+    autoChooser.addOption("Bo's Sample Auto", new PathPlannerAuto("New Auto"));
+    autoChooser.addOption("Simple Auto", new PathPlannerAuto("Simple"));
 
     // Set up speed limit chooser
     linearSpeedLimitChooser = new LoggedDashboardChooser<>("Linear Speed Limit");
@@ -253,9 +296,6 @@ public class RobotContainer {
     onesSpeedChooser.addOption("8", 0.08);
     onesSpeedChooser.addOption("9", 0.09);
 
-
-    
-
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -273,9 +313,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> controller.getLeftY(),
-            () -> controller.getLeftX(),
-            () -> controller.getRightX(),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX(),
             () -> linearSpeedLimitChooser.get(),
             () -> angularSpeedLimitChooser.get(),
             () -> {
@@ -317,18 +357,6 @@ public class RobotContainer {
             () -> {
               turret.stop();
             }, turret));
-
-    // Lock to 0° when A button is held
-    controller
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> controller.getLeftY(),
-                () -> controller.getLeftX(),
-                () -> linearSpeedLimitChooser.get(),
-                () -> angularSpeedLimitChooser.get(),
-                () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
