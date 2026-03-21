@@ -31,6 +31,31 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
    * @param poseSupplier Supplier for the robot pose to use in simulation.
    */
   public VisionIOPhotonVisionSim(
+      String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier, boolean isBlue) {
+    super(name, robotToCamera, isBlue);
+    this.poseSupplier = poseSupplier;
+
+    // Initialize vision sim
+    if (visionSim == null) {
+      visionSim = new VisionSystemSim("main");
+      visionSim.addAprilTags(aprilTagLayout);
+    }
+
+    // Add sim camera
+    var cameraProperties = new SimCameraProperties();
+    cameraProperties.setCalibration(960, 720, Rotation2d.fromDegrees(90));
+    cameraProperties.setCalibError(0.35, 0.10);
+    cameraProperties.setFPS(15);
+    cameraProperties.setAvgLatencyMs(50);
+    cameraProperties.setLatencyStdDevMs(15);
+
+    cameraSim = new PhotonCameraSim(camera, cameraProperties, aprilTagLayout);
+    visionSim.addCamera(cameraSim, robotToCamera);
+
+    cameraSim.enableDrawWireframe(true);
+  }
+
+  public VisionIOPhotonVisionSim(
       String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
     super(name, robotToCamera);
     this.poseSupplier = poseSupplier;

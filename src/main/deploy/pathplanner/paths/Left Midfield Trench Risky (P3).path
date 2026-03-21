@@ -64,6 +64,14 @@
     {
       "waypointRelativePos": 0.05,
       "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 0.8937759336099764,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.546058091286314,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [
@@ -132,7 +140,7 @@
     "rotation": 155.6954507340633
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Trench",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -92.64254529406472

@@ -62,8 +62,16 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.05,
-      "rotationDegrees": -90.0
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 0.8091286307053851,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.7900414937759135,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [
@@ -132,10 +140,10 @@
     "rotation": -139.5739212599007
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Trench",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": -92.64254529406472
+    "rotation": 0.0
   },
   "useDefaultConstraints": false
 }

@@ -60,20 +60,21 @@ public class VisionIOPhotonVision implements VisionIO {
                   result.getBestTarget().getArea());
         else {
           var target = result.getTargets().stream()
-                             .map(x -> x.getFiducialId())
-                             .filter(x -> x == (isBlue == 0 ? 26 : 10))
+                              .filter(x -> x.getFiducialId() == (isBlue == 0 ? 26 : 10))
                              .findFirst();
           if (target.isPresent()) {
             inputs.latestTargetObservation =
               new TargetObservation(
                 Rotation2d.fromDegrees(
-                  result.getTargets().get(target.get()).getYaw()
+                  target.get().getYaw()
                 ),
                 Rotation2d.fromDegrees(
-                  result.getTargets().get(target.get()).getPitch()
+                  target.get().getPitch()
                 ),
-                result.getTargets().get(target.get()).getArea()
+                target.get().getArea()
               );
+
+              System.out.println("Is Blue: " + isBlue);
           } else {
             inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
           }

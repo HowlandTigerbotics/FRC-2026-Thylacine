@@ -46,4 +46,8 @@ public class IntakePosition extends SubsystemBase {
     }
     intakePositionIO.setPositionPercent(percent);
   }
+
+  public boolean getLimitSwitch() {
+    return intakePositionInputs.limitSwitch;
+  }
 }

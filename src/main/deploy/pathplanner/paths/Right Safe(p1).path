@@ -68,7 +68,7 @@
     "rotation": -143.97262661489646
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Preload Only",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

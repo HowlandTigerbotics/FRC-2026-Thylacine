@@ -14,11 +14,14 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.events.EventTrigger;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -135,7 +138,8 @@ public class RobotContainer {
             drive::addVisionMeasurement,
             new VisionIOPhotonVision(piCameraName, robotToPiCamera));
         turretVision = new Vision(
-          null, new VisionIOPhotonVision("HD_2MP_WEBCAM", Transform3d.kZero));
+          null, new VisionIOPhotonVision("HD_2MP_WEBCAM", Transform3d.kZero, 
+          DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue));
           
         break;
 
@@ -172,7 +176,7 @@ public class RobotContainer {
             new VisionIOPhotonVisionSim(piCameraName, robotToPiCamera, drive::getPose));
         
         turretVision = new Vision(
-          drive::addVisionMeasurement, new VisionIO() {});
+          null, new VisionIOPhotonVisionSim("Cam2", Transform3d.kZero, drive::getPose));
         break;
 
       default:
@@ -274,11 +278,11 @@ public class RobotContainer {
     );
 
     NamedCommands.registerCommand("Deploy Intake", 
-           Commands.run(
+           Commands.runOnce(
             () -> {
-              intakePosition.setPositionPercent(0.2);
+              intakePosition.setPositionPercent(0.4);
             }, intakePosition
-           ).withTimeout(2)
+           )
     );
 
     NamedCommands.registerCommand("Spin Intake", 
@@ -405,7 +409,10 @@ public class RobotContainer {
     intakePosition.setDefaultCommand(
         new RunCommand(
             () -> {
-              intakePosition.stop();
+              if (!inAuto || intakePosition.getLimitSwitch()) {
+                intakePosition.stop();
+                System.out.println(intakePosition.getLimitSwitch());
+              }
             }, intakePosition));
 
     intakeRoller.setDefaultCommand(
@@ -430,8 +437,8 @@ public class RobotContainer {
             }, shooterFeed));
 
     turret.setDefaultCommand(
-        TurretCommands.turretAtAngle(turret, () -> 0.7, () -> turretVision.getTargetX(0).minus(turret.getRotation())));
-
+        TurretCommands.turretAtAngle(turret, () -> 0.7, () -> turret.getRotation().minus(turretVision.getTargetX(0)))//.minus(turret.getRotation()))
+    );       
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -443,7 +450,7 @@ public class RobotContainer {
               () -> {
                 shooter.setPercent(0.63);
               }, shooter).alongWith(
-                Commands.waitSeconds(0.5)
+                Commands.waitSeconds(0.3)
                 .andThen(
                   
                     Commands.run(
@@ -492,13 +499,13 @@ public class RobotContainer {
     controller.pov(90).whileTrue(
         new RunCommand(
             () -> {
-              turret.setTurretPercent(-0.05);
+              turret.setTurretPercent(-0.1);
             }, turret));
 
     controller.pov(270).whileTrue(
         new RunCommand(
             () -> {
-              turret.setTurretPercent(0.05);
+              turret.setTurretPercent(0.1);
             }, turret));
 
     controller.leftBumper().whileTrue(
@@ -538,15 +545,10 @@ public class RobotContainer {
     controller.back().whileTrue(
       new RunCommand(
         () -> {
-          double k = tensSpeedChooser.get() + onesSpeedChooser.get(); // Increase to reduce speed further
-          double percent = 0.63 + k * Math.log(-31.05909 * Math.log(turretVision.getTargetAreaPercent(0) / 100.0) - 72.3987);
-          if (percent > 1 || percent < 0) {
-            SmartDashboard.putString("Auto Speed", "TOO FAR OR TOO CLOSE");
-            return;
-          }
-          
-            SmartDashboard.putString("Auto Speed", "GOOD");
-          shooter.setPercent(percent);
+          double k = -37.55279 * turretVision.getTargetAreaPercent(0) + 111.40195;
+          System.out.println(k);
+          shooter.setPercent(tensSpeedChooser.get() + onesSpeedChooser.get());
+          //shooter.setPercent(MathUtil.clamp(k, 0, 100));
         }, shooter)
     );
 
