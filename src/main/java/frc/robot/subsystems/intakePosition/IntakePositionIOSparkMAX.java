@@ -24,12 +24,15 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DigitalInput;
 
 /** Add your docs here. */
 public class IntakePositionIOSparkMAX implements IntakePositionIO{
   // Hardware objects
   private final SparkBase positionSpark;
   private final RelativeEncoder positionEncoder;
+
+  private final DigitalInput limitSwitch;
 
   // Closed loop controllers
   private final SparkClosedLoopController positionController;
@@ -43,6 +46,8 @@ public class IntakePositionIOSparkMAX implements IntakePositionIO{
     positionEncoder = positionSpark.getEncoder();
     
     positionController = positionSpark.getClosedLoopController();
+
+    limitSwitch = new DigitalInput(2);
 
     configureMotors();
   }
@@ -98,6 +103,8 @@ public class IntakePositionIOSparkMAX implements IntakePositionIO{
         (values) -> inputs.positionAppliedVolts = values[0] * values[1]);
     ifOk(positionSpark, positionSpark::getOutputCurrent, (value) -> inputs.positionCurrentAmps = value);
     inputs.positionConnected = positionConnectedDebounce.calculate(!sparkStickyFault);
+
+    inputs.limitSwitch = !limitSwitch.get();
   }
 
   @Override

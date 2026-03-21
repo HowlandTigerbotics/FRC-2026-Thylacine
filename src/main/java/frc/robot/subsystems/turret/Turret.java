@@ -43,6 +43,12 @@ public class Turret extends SubsystemBase {
   }
 
   public void setTurretOpenLoop(double output) {
+    if (turretInputs.leftLimitHit && output > 0) {
+      turretIO.setTurretPercent(0);
+    }
+    if (turretInputs.rightLimitHit && output < 0) {
+      turretIO.setTurretPercent(0);
+    }
     turretIO.setTurretOpenLoop(output);
   }
 
@@ -51,6 +57,12 @@ public class Turret extends SubsystemBase {
   }
 
   public void setTurretPercent(double percent) {
+    if (turretInputs.leftLimitHit && percent > 0) {
+      turretIO.setTurretPercent(0);
+    }
+    if (turretInputs.rightLimitHit && percent < 0) {
+      turretIO.setTurretPercent(0);
+    }
     turretIO.setTurretPercent(percent);
   }
 
@@ -64,5 +76,17 @@ public class Turret extends SubsystemBase {
 
   public double getVelocityRadPerSec() {
     return turretInputs.positionMotorVelocityRadPerSec;
+  }
+
+  public void setRotation(Rotation2d rotation) {
+    turretInputs.positionMotorPosition = rotation;
+  }
+
+  public boolean hitLeftLimit() {
+    return turretInputs.leftLimitHit;
+  }
+  
+  public boolean hitRightLimit() {
+    return turretInputs.rightLimitHit;
   }
 }

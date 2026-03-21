@@ -40,6 +40,10 @@ public class IntakePosition extends SubsystemBase {
   }
 
   public void setPositionPercent(double percent) {
+    if (intakePositionInputs.limitSwitch && percent > 0) {
+      intakePositionIO.setPositionPercent(0);
+      return;
+    }
     intakePositionIO.setPositionPercent(percent);
   }
 }

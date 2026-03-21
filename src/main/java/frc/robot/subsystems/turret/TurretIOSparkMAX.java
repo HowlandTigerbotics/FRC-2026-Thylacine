@@ -24,12 +24,16 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DigitalInput;
 
 /** Add your docs here. */
 public class TurretIOSparkMAX implements TurretIO {
     // Hardware objects
     private final SparkBase turretSpark;
     private final RelativeEncoder turretEncoder;
+
+    private final DigitalInput leftLimitSwitch;
+    private final DigitalInput rightLimitSwitch;
 
     // Closed loop controllers
     private final SparkClosedLoopController turretController;
@@ -41,6 +45,9 @@ public class TurretIOSparkMAX implements TurretIO {
         turretSpark = new SparkMax(Ports.TURRET_PORT_ID, MotorType.kBrushless);
         turretEncoder = turretSpark.getEncoder();
         turretController = turretSpark.getClosedLoopController();
+
+        leftLimitSwitch = new DigitalInput(Ports.TURRET_LEFT_LIMIT_DIO_PORT);
+        rightLimitSwitch = new DigitalInput(Ports.TURRET_RIGHT_LIMIT_DIO_PORT);
 
         configureMotors();
     }
@@ -94,6 +101,16 @@ public class TurretIOSparkMAX implements TurretIO {
                 (values) -> inputs.positionMotorAppliedVolts = values[0] * values[1]);
         ifOk(turretSpark, turretSpark::getOutputCurrent, (value) -> inputs.positionMotorCurrentAmps = value);
         inputs.positionMotorConnected = turretConnectedDebouncer.calculate(!sparkStickyFault);
+
+        inputs.leftLimitHit = !leftLimitSwitch.get();
+        inputs.rightLimitHit = !rightLimitSwitch.get();
+
+        if (inputs.leftLimitHit) {
+            inputs.positionMotorPosition = Rotation2d.kZero;
+        }
+        if (inputs.rightLimitHit) {
+            inputs.positionMotorPosition = Rotation2d.k180deg;
+        }
     }
 
     @Override

@@ -17,6 +17,8 @@ public interface IntakePositionIO {
         public double positionVelocityRadPerSec = 0.0;
         public double positionAppliedVolts = 0.0;
         public double positionCurrentAmps = 0.0;
+
+        public boolean limitSwitch = false;
     }
 
     /** Updates the set of loggable inputs. */

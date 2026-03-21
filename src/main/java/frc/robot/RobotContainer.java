@@ -16,8 +16,10 @@ import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -54,10 +56,11 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.piCameraName;
+import static frc.robot.subsystems.vision.VisionConstants.robotToPiCamera;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.photonvision.PhotonCamera;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -80,12 +83,15 @@ public class RobotContainer {
   private final ShooterFeed shooterFeed;
   private final Turret turret;
 
+  // Vision
   private final Vision vision;  
+  private final Vision turretVision;
+  private final PhotonCamera intakeCamera = new PhotonCamera("piCameraName"); // TODO CHANGE NAME
 
-  //private final SparkMax motor;
-
-  // Field Relative for drive
+  // Booleans for toggles and states
   private boolean isFieldRelative = false;
+  private boolean inAuto = true;
+  private boolean inAutoAlignment = true;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -127,7 +133,10 @@ public class RobotContainer {
         // TODO: add cameras to vision
         vision = new Vision(
             drive::addVisionMeasurement,
-            new VisionIOPhotonVision(camera0Name, robotToCamera0));
+            new VisionIOPhotonVision(piCameraName, robotToPiCamera));
+        turretVision = new Vision(
+          null, new VisionIOPhotonVision("HD_2MP_WEBCAM", Transform3d.kZero));
+          
         break;
 
       case SIM:
@@ -160,7 +169,10 @@ public class RobotContainer {
             });
         vision = new Vision(
             drive::addVisionMeasurement,
-            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose));
+            new VisionIOPhotonVisionSim(piCameraName, robotToPiCamera, drive::getPose));
+        
+        turretVision = new Vision(
+          drive::addVisionMeasurement, new VisionIO() {});
         break;
 
       default:
@@ -198,6 +210,10 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
         }, new VisionIO() {
         });
+
+        
+        turretVision = new Vision(
+          drive::addVisionMeasurement, new VisionIO() {});
         break;
     }
 
@@ -229,7 +245,63 @@ public class RobotContainer {
         )
     );
 
-    new EventTrigger("SampleEvent").onTrue(Commands.print("EventMarkerTriggered"));
+    // Ignore Above. Increase number
+
+    NamedCommands.registerCommand("Spin Up", 
+        Commands.runOnce(() -> {
+          shooter.setPercent(0.63);
+        }, shooter)
+    );
+
+    NamedCommands.registerCommand("Feed", 
+        Commands.run(
+          () -> {
+            intakeFeed.setFeedPercent(0.5);
+            shooterFeed.setFeedPercent(0.5);
+          }, intakeFeed,shooterFeed).withTimeout(5)
+    );
+
+    NamedCommands.registerCommand("Stop", 
+          Commands.runOnce(
+           () -> {
+            intakeFeed.stop();
+            shooterFeed.stop();
+            shooter.stop();
+            intakePosition.stop();
+            intakeRoller.stop();
+           }  
+          )
+    );
+
+    NamedCommands.registerCommand("Deploy Intake", 
+           Commands.run(
+            () -> {
+              intakePosition.setPositionPercent(0.2);
+            }, intakePosition
+           ).withTimeout(2)
+    );
+
+    NamedCommands.registerCommand("Spin Intake", 
+            Commands.runOnce(
+              () -> {
+                intakeRoller.setIntakePercent(0.7);
+              }, intakeRoller)
+    );
+
+    // Check Camera Index
+    NamedCommands.registerCommand("Turret Aim", 
+              TurretCommands.turretAtAngle(turret, () -> 0.7, 
+              () -> turret.getRotation().minus(turretVision.getTargetX(0)))
+              .withTimeout(1)
+    );
+
+    new EventTrigger("Intake Event").whileTrue(
+      Commands.run(
+        () -> {
+          intakeRoller.setIntakePercent(0.7);
+        }, intakeRoller)
+    );
+    
     
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -253,8 +325,9 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Add PathPlanner Autos here
-    autoChooser.addOption("Bo's Sample Auto", new PathPlannerAuto("New Auto"));
-    autoChooser.addOption("Simple Auto", new PathPlannerAuto("Simple"));
+    autoChooser.addOption("Test Subsystems", new PathPlannerAuto( "Test subsystem"));
+    autoChooser.addOption("Left Safe", new PathPlannerAuto("Left Safe"));
+    autoChooser.addOption("Right Safe", new PathPlannerAuto("Right Safe"));
 
     // Set up speed limit chooser
     linearSpeedLimitChooser = new LoggedDashboardChooser<>("Linear Speed Limit");
@@ -267,6 +340,7 @@ public class RobotContainer {
 
     angularSpeedLimitChooser.addDefaultOption("Competition Mode", 1.0);
     angularSpeedLimitChooser.addOption("Fast Speed (70%)", 0.7);
+    angularSpeedLimitChooser.addOption("Mediumer Speed (50%)", 0.5);
     angularSpeedLimitChooser.addOption("Medium Speed (30%)", 0.3);
     angularSpeedLimitChooser.addOption("Slow Speed (15%)", 0.15);
 
@@ -337,13 +411,16 @@ public class RobotContainer {
     intakeRoller.setDefaultCommand(
         new RunCommand(
             () -> {
-              intakeRoller.stop();
+              if (!inAuto)
+                if (intakeCamera.getLatestResult().hasTargets()) intakeRoller.setIntakePercent(0.7);
+                else intakeRoller.stop();
             }, intakeRoller));
 
     shooter.setDefaultCommand(
         new RunCommand(
             () -> {
-              shooter.stop();
+              if (!inAuto)
+                shooter.stop();
             }, shooter));
 
     shooterFeed.setDefaultCommand(
@@ -353,23 +430,32 @@ public class RobotContainer {
             }, shooterFeed));
 
     turret.setDefaultCommand(
-        new RunCommand(
-            () -> {
-              turret.stop();
-            }, turret));
+        TurretCommands.turretAtAngle(turret, () -> 0.7, () -> turretVision.getTargetX(0).minus(turret.getRotation())));
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // Reset gyro to 0° when B button is pressed
     controller
         .b()
-        .onTrue(
-            Commands.runOnce(
-                () -> drive.setPose(
-                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                drive)
-                .ignoringDisable(true));
+        .whileTrue(
+          
+            Commands.run(
+              () -> {
+                shooter.setPercent(0.63);
+              }, shooter).alongWith(
+                Commands.waitSeconds(0.5)
+                .andThen(
+                  
+                    Commands.run(
+                      () -> {
+                        intakeFeed.setFeedPercent(0.7);
+                        shooterFeed.setFeedPercent(0.7);
+                      }, intakeFeed, shooterFeed)
+                  
+                )
+              )  
+          
+        );
 
     // Switch from Field Relative to Robot Relative when Home button is pressed
     controller
@@ -379,16 +465,17 @@ public class RobotContainer {
                 () -> {
                   isFieldRelative = !isFieldRelative;
                 }));
+    
+    controller.rightStick()
+        .onTrue(
+          Commands.runOnce(
+                () -> drive.setPose(
+                    new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                drive)
+                .ignoringDisable(true));
 
     controller.y().whileTrue(
-        DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> 0.0, // no translation X
-            () -> 0.0, // no translation Y
-            () -> 1.0, // linear speed scale
-            () -> 0.7, // angular speed scale
-            () -> drive.getRotation().plus(vision.getTargetX(0)) // desired heading
-        ));
+        TurretCommands.turretAtAngle(turret, () -> 0.7, () -> turret.getRotation().minus(turretVision.getTargetX(0))));
 
     controller.pov(0).whileTrue(
         new RunCommand(
@@ -429,7 +516,7 @@ public class RobotContainer {
     controller.leftTrigger(0.3).whileTrue(
       new RunCommand(
         () -> {
-          intakeFeed.setFeedPercent(0.7);
+          intakeFeed.setFeedPercent(.7);
         }, intakeFeed)
     );
 
@@ -447,11 +534,28 @@ public class RobotContainer {
           () -> turret.getRotation().minus(vision.getTargetX(0)))
     );
 
+    // TODO: TEST
     controller.back().whileTrue(
       new RunCommand(
         () -> {
-          shooter.setPercent(tensSpeedChooser.get() == 1.0 ? 1.0 : tensSpeedChooser.get() + onesSpeedChooser.get());
+          double k = tensSpeedChooser.get() + onesSpeedChooser.get(); // Increase to reduce speed further
+          double percent = 0.63 + k * Math.log(-31.05909 * Math.log(turretVision.getTargetAreaPercent(0) / 100.0) - 72.3987);
+          if (percent > 1 || percent < 0) {
+            SmartDashboard.putString("Auto Speed", "TOO FAR OR TOO CLOSE");
+            return;
+          }
+          
+            SmartDashboard.putString("Auto Speed", "GOOD");
+          shooter.setPercent(percent);
         }, shooter)
+    );
+
+    controller.a().whileTrue(
+      new RunCommand(
+        () -> {
+          intakeFeed.setFeedPercent(-0.3);
+        }, intakeFeed
+      )
     );
   }
 
@@ -462,5 +566,9 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  public void setInAuto(boolean inAuto) {
+    this.inAuto = inAuto;
   }
 }

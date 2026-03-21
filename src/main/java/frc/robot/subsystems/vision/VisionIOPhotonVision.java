@@ -22,6 +22,7 @@ import org.photonvision.PhotonCamera;
 public class VisionIOPhotonVision implements VisionIO {
   protected final PhotonCamera camera;
   protected final Transform3d robotToCamera;
+  protected final int isBlue; // -1 is bad, 0 is blue, 1 is red
 
   /**
    * Creates a new VisionIOPhotonVision.
@@ -32,6 +33,13 @@ public class VisionIOPhotonVision implements VisionIO {
   public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
     camera = new PhotonCamera(name);
     this.robotToCamera = robotToCamera;
+    this.isBlue = -1;
+  }
+
+  public VisionIOPhotonVision(String name, Transform3d robotToCamera, boolean isBlue) {
+    camera = new PhotonCamera(name);
+    this.robotToCamera = robotToCamera;
+    this.isBlue = !isBlue ? 1 : 0;
   }
 
   @Override
@@ -44,12 +52,34 @@ public class VisionIOPhotonVision implements VisionIO {
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
       if (result.hasTargets()) {
-        inputs.latestTargetObservation =
-            new TargetObservation(
-                Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
-                Rotation2d.fromDegrees(result.getBestTarget().getPitch()));
+        if (isBlue == -1)
+          inputs.latestTargetObservation =
+              new TargetObservation(
+                  Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
+                  Rotation2d.fromDegrees(result.getBestTarget().getPitch()),
+                  result.getBestTarget().getArea());
+        else {
+          var target = result.getTargets().stream()
+                             .map(x -> x.getFiducialId())
+                             .filter(x -> x == (isBlue == 0 ? 26 : 10))
+                             .findFirst();
+          if (target.isPresent()) {
+            inputs.latestTargetObservation =
+              new TargetObservation(
+                Rotation2d.fromDegrees(
+                  result.getTargets().get(target.get()).getYaw()
+                ),
+                Rotation2d.fromDegrees(
+                  result.getTargets().get(target.get()).getPitch()
+                ),
+                result.getTargets().get(target.get()).getArea()
+              );
+          } else {
+            inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
+          }
+        }
       } else {
-        inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero);
+        inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
       }
 
       // Add pose observation
@@ -104,7 +134,8 @@ public class VisionIOPhotonVision implements VisionIO {
                   target.poseAmbiguity, // Ambiguity
                   1, // Tag count
                   cameraToTarget.getTranslation().getNorm(), // Average tag distance
-                  PoseObservationType.PHOTONVISION)); // Observation type
+                  PoseObservationType.PHOTONVISION
+                  )); // Observation type
         }
       }
     }

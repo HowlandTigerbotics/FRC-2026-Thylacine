@@ -99,6 +99,8 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
+
+    robotContainer.setInAuto(true);
   }
 
   /** This function is called periodically during autonomous. */
@@ -115,6 +117,8 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    robotContainer.setInAuto( false);
   }
 
   /** This function is called periodically during operator control. */

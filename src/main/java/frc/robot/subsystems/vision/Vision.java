@@ -58,6 +58,10 @@ public class Vision extends SubsystemBase {
         return inputs[cameraIndex].latestTargetObservation.tx();
     }
 
+    public double getTargetAreaPercent(int cameraIndex) {
+        return inputs[cameraIndex].latestTargetObservation.areaPercentage();
+    }
+
     @Override
     public void periodic() {
         for (int i = 0; i < io.length; i++) {
@@ -131,7 +135,8 @@ public class Vision extends SubsystemBase {
                 }
 
                 // Send vision observation
-                consumer.accept(
+                if (consumer != null )
+                    consumer.accept(
                         observation.pose().toPose2d(),
                         observation.timestamp(),
                         VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));

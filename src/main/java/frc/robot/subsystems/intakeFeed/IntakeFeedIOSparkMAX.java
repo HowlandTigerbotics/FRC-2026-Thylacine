@@ -42,7 +42,7 @@ public class IntakeFeedIOSparkMAX implements IntakeFeedIO{
     // TODO: Update the constants later
     var feedConfig = new SparkMaxConfig();
     feedConfig
-        .idleMode(IdleMode.kBrake)
+        .idleMode(IdleMode.kCoast)
         .inverted(true)
         .smartCurrentLimit(30)
         .voltageCompensation(12.0);

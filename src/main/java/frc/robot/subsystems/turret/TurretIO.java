@@ -14,6 +14,8 @@ public interface TurretIO {
     @AutoLog
     // TODO: Verify
     public static class TurretIOInputs extends PositionMotorInputs {
+        public boolean leftLimitHit = false;
+        public boolean rightLimitHit = false;
     }
 
     /** Updates the set of loggable inputs. */
